@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeachFocus — Pomodoro Study App</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- ═══════════════════════ HEADER ═══════════════════════ -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🍎</span>
+        <span class="logo-text">TeachFocus</span>
+      </div>
+      <div class="header-stats">
+        <div class="stat-pill" id="stat-sessions">
+          <span class="stat-icon">🍅</span>
+          <span id="sessions-count">0</span>
+          <span class="stat-label">today</span>
+        </div>
+        <div class="stat-pill" id="stat-time">
+          <span class="stat-icon">⏱</span>
+          <span id="focus-time">0m</span>
+          <span class="stat-label">focused</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="layout">
+
+      <!-- ═══════════════════ LEFT COLUMN ═══════════════════ -->
+      <div class="col-left">
+
+        <!-- MODE SELECTOR -->
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab active" data-mode="pomodoro" role="tab">Study 25m</button>
+          <button class="mode-tab" data-mode="short" role="tab">Short Break 5m</button>
+          <button class="mode-tab" data-mode="long" role="tab">Long Break 15m</button>
+        </div>
+
+        <!-- TIMER CARD -->
+        <div class="timer-card">
+          <div class="timer-ring-wrapper">
+            <svg class="timer-ring" viewBox="0 0 220 220">
+              <circle class="ring-bg" cx="110" cy="110" r="96" />
+              <circle class="ring-progress" id="ring-progress" cx="110" cy="110" r="96"
+                stroke-dasharray="603.2" stroke-dashoffset="0" />
+            </svg>
+            <div class="timer-display">
+              <div class="timer-time" id="timer-display">25:00</div>
+              <div class="timer-mode-label" id="timer-mode-label">Focus Time</div>
+            </div>
+          </div>
+
+          <!-- POMODORO DOTS -->
+          <div class="pomodoro-dots" id="pomodoro-dots">
+            <span class="dot active" data-idx="0"></span>
+            <span class="dot" data-idx="1"></span>
+            <span class="dot" data-idx="2"></span>
+            <span class="dot" data-idx="3"></span>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="timer-controls">
+            <button class="btn-control btn-reset" id="btn-reset" title="Reset">↺</button>
+            <button class="btn-control btn-primary" id="btn-start">Start</button>
+            <button class="btn-control btn-skip" id="btn-skip" title="Skip">⏭</button>
+          </div>
+
+          <!-- AUTO-START TOGGLE -->
+          <label class="auto-toggle">
+            <input type="checkbox" id="auto-start" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Auto-start next session</span>
+          </label>
+        </div>
+
+        <!-- MOTIVATIONAL QUOTE -->
+        <div class="quote-card" id="quote-card">
+          <p class="quote-text" id="quote-text"></p>
+          <button class="quote-refresh" id="quote-refresh" title="New quote">↻</button>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════ RIGHT COLUMN ═══════════════════ -->
+      <div class="col-right">
+
+        <!-- CURRENT TOPIC -->
+        <div class="section-card topic-section">
+          <div class="section-header">
+            <h2 class="section-title">📚 Studying Now</h2>
+          </div>
+          <select class="topic-select" id="topic-select">
+            <option value="">— Choose a topic —</option>
+            <optgroup label="Core Teaching">
+              <option value="Child Development &amp; Psychology">Child Development &amp; Psychology</option>
+              <option value="Curriculum Design &amp; Planning">Curriculum Design &amp; Planning</option>
+              <option value="Lesson Planning">Lesson Planning</option>
+              <option value="Assessment &amp; Feedback Strategies">Assessment &amp; Feedback Strategies</option>
+              <option value="Classroom Management">Classroom Management</option>
+            </optgroup>
+            <optgroup label="Literacy &amp; Numeracy">
+              <option value="Phonics &amp; Early Reading">Phonics &amp; Early Reading</option>
+              <option value="Literacy Methods &amp; Writing">Literacy Methods &amp; Writing</option>
+              <option value="Numeracy &amp; Maths Teaching">Numeracy &amp; Maths Teaching</option>
+            </optgroup>
+            <optgroup label="Inclusion &amp; Wellbeing">
+              <option value="SEND &amp; Inclusion Strategies">SEND &amp; Inclusion Strategies</option>
+              <option value="Behaviour &amp; Pastoral Care">Behaviour &amp; Pastoral Care</option>
+              <option value="PSHE &amp; Wellbeing">PSHE &amp; Wellbeing</option>
+            </optgroup>
+            <optgroup label="Subject Areas">
+              <option value="Science &amp; STEM">Science &amp; STEM</option>
+              <option value="Creative Arts">Creative Arts</option>
+              <option value="Physical Education">Physical Education</option>
+              <option value="ICT &amp; Digital Literacy">ICT &amp; Digital Literacy</option>
+              <option value="History &amp; Geography">History &amp; Geography</option>
+              <option value="Religious Education">Religious Education</option>
+            </optgroup>
+            <optgroup label="Professional Practice">
+              <option value="Safeguarding &amp; Child Protection">Safeguarding &amp; Child Protection</option>
+              <option value="Professional Standards &amp; Ethics">Professional Standards &amp; Ethics</option>
+              <option value="Parent &amp; Community Engagement">Parent &amp; Community Engagement</option>
+              <option value="Reflective Practice">Reflective Practice</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- TASK LIST -->
+        <div class="section-card task-section">
+          <div class="section-header">
+            <h2 class="section-title">✅ Today's Tasks</h2>
+            <span class="task-counter" id="task-counter">0/0</span>
+          </div>
+          <div class="task-input-row">
+            <input
+              class="task-input"
+              id="task-input"
+              type="text"
+              placeholder="Add a study task…"
+              maxlength="120"
+            />
+            <button class="btn-add" id="btn-add-task">+</button>
+          </div>
+          <ul class="task-list" id="task-list">
+            <!-- tasks rendered here -->
+          </ul>
+          <button class="btn-clear-done" id="btn-clear-done">Clear completed</button>
+        </div>
+
+        <!-- SESSION NOTES -->
+        <div class="section-card notes-section">
+          <div class="section-header">
+            <h2 class="section-title">📝 Session Notes</h2>
+            <button class="btn-clear-notes" id="btn-clear-notes" title="Clear notes">✕</button>
+          </div>
+          <textarea
+            class="notes-area"
+            id="notes-area"
+            placeholder="Jot down key points, ideas, or things to revisit…"
+            spellcheck="true"
+          ></textarea>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════ BREAK OVERLAY ═══════════════════ -->
+  <div class="break-overlay hidden" id="break-overlay">
+    <div class="break-card">
+      <div class="break-icon" id="break-icon">☕</div>
+      <h2 class="break-title" id="break-title">Short Break!</h2>
+      <p class="break-msg" id="break-msg">Great work! Take 5 minutes to rest your eyes and stretch.</p>
+      <div class="break-timer" id="break-timer">5:00</div>
+      <button class="btn-break-skip" id="btn-break-skip">Skip Break →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ COMPLETE TOAST ═══════════════════ -->
+  <div class="toast hidden" id="toast">
+    <span class="toast-icon" id="toast-icon">🍅</span>
+    <span class="toast-msg" id="toast-msg">Pomodoro complete!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
