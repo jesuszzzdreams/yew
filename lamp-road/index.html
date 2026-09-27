@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#1b2340" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>The Lamp Road</title>
+<style>
+/* =====================================================================
+   THE LAMP ROAD: styles
+   Everything is drawn in code. No images, no fonts, no libraries.
+   ===================================================================== */
+:root {
+  --ink: #3a2717;
+  --ink-soft: #6b4d31;
+  --parch-1: #f6e8c6;
+  --parch-2: #e2c893;
+  --gold: #ffc766;
+  --gold-deep: #e39a2d;
+  --night: #121a33;
+  --glass: rgba(14, 18, 36, 0.55);
+  --glass-edge: rgba(255, 220, 160, 0.25);
+  --text: #fff6e6;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: #1b2340; color: var(--text);
+  font-family: var(--serif); user-select: none; -webkit-user-select: none; touch-action: none;
+  overscroll-behavior: none;
+}
+canvas#game { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+.hidden { display: none !important; }
+button {
+  font-family: var(--serif); cursor: pointer; border: none; color: inherit; touch-action: manipulation;
+}
+
+/* ---------- Generic overlay screens ---------- */
+.screen {
+  position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(16px + var(--safe-t)) calc(16px + var(--safe-r)) calc(16px + var(--safe-b)) calc(16px + var(--safe-l));
+  z-index: 10; text-align: center;
+}
+.panel {
+  background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 18px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 20px 22px; width: min(560px, 100%); max-height: calc(100vh - 32px - var(--safe-t) - var(--safe-b));
+  overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.35); touch-action: pan-y;
+}
+.panel h2 { margin: 0 0 6px; font-size: clamp(22px, 5vw, 30px); letter-spacing: 0.04em; color: var(--gold); font-weight: normal; }
+.panel .sub { opacity: 0.8; font-size: 14px; margin: 0 0 14px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(180deg, #ffd27f, #e39a2d); color: #3a2410; font-weight: bold;
+  padding: 12px 22px; border-radius: 999px; font-size: 17px; letter-spacing: 0.03em; min-height: 46px;
+  box-shadow: 0 4px 0 #9a5e17, 0 8px 22px rgba(255, 180, 70, 0.35); transition: transform .08s;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #9a5e17; }
+.btn.ghost { background: rgba(255,255,255,0.1); color: var(--text); box-shadow: inset 0 0 0 1px var(--glass-edge); }
+.btn.small { padding: 8px 14px; font-size: 14px; min-height: 36px; }
+.btn:disabled { opacity: 0.45; filter: grayscale(0.6); cursor: default; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+
+/* ---------- Title ---------- */
+#title { justify-content: space-between; pointer-events: auto; background: radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0) 40%, rgba(10,12,30,0.35) 100%); }
+#title .top { margin-top: 6vh; }
+#title h1 {
+  font-size: clamp(42px, 11vw, 92px); margin: 0; font-weight: normal; letter-spacing: 0.06em; color: #fff4dc;
+  text-shadow: 0 0 30px rgba(255, 200, 110, 0.55), 0 3px 0 rgba(60, 30, 10, 0.35);
+}
+#title .verse { max-width: 560px; margin: 12px auto 0; font-style: italic; font-size: clamp(14px, 3.4vw, 18px); opacity: 0.92; text-shadow: 0 1px 6px rgba(0,0,0,0.5); }
+#title .ref { display: block; font-style: normal; font-size: 12px; letter-spacing: 0.2em; opacity: 0.75; margin-top: 4px; text-transform: uppercase; }
+#title .begin { font-size: clamp(20px, 5vw, 28px); letter-spacing: 0.12em; animation: pulse 2.2s ease-in-out infinite; text-shadow: 0 0 18px rgba(255, 200, 110, 0.8); }
+#title .bottom { margin-bottom: 2vh; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+#title .meta { font-size: 13px; opacity: 0.85; letter-spacing: 0.05em; }
+#title .howto { font-size: 13px; opacity: 0.75; max-width: 520px; line-height: 1.5; }
+@keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; font-family: var(--serif); }
+#hud .tl { position: absolute; top: calc(10px + var(--safe-t)); left: calc(12px + var(--safe-l)); text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+#hud .tr { position: absolute; top: calc(10px + var(--safe-t)); right: calc(12px + var(--safe-r)); display: flex; gap: 8px; align-items: flex-start; }
+#hudDist { font-size: clamp(20px, 4.6vw, 30px); letter-spacing: 0.03em; }
+#hudScore { font-size: clamp(14px, 3.2vw, 18px); opacity: 0.9; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; background: var(--glass); border: 1px solid var(--glass-edge);
+  border-radius: 999px; padding: 5px 11px 5px 8px; font-size: clamp(14px, 3.4vw, 17px); min-height: 34px;
+}
+.chip svg { width: 18px; height: 18px; flex: none; }
+.iconbtn {
+  pointer-events: auto; width: 40px; height: 40px; border-radius: 50%; background: var(--glass);
+  border: 1px solid var(--glass-edge); display: inline-flex; align-items: center; justify-content: center; padding: 0;
+}
+.iconbtn svg { width: 20px; height: 20px; }
+#hudChips { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+#hudChipsRow { display: flex; gap: 6px; }
+#boostWrap {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--safe-b));
+  width: min(320px, 60vw); display: flex; align-items: center; gap: 8px;
+}
+#boostWrap svg { width: 22px; height: 22px; flex: none; }
+#boostBar { flex: 1; height: 12px; border-radius: 999px; background: rgba(0,0,0,0.35); border: 1px solid var(--glass-edge); overflow: hidden; }
+#boostFill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb347, #fff1a8); box-shadow: 0 0 12px #ffcf6b; }
+#boostWrap.active #boostFill { background: linear-gradient(90deg, #fff, #fff6c8); }
+#combo {
+  position: absolute; top: calc(18% + var(--safe-t)); left: 0; right: 0; text-align: center; pointer-events: none;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55); transition: opacity .25s;
+}
+#comboNames { font-size: clamp(15px, 3.6vw, 22px); letter-spacing: 0.08em; text-transform: uppercase; color: #fff4d6; }
+#comboPts { font-size: clamp(24px, 6vw, 40px); color: var(--gold); }
+#items { position: absolute; right: calc(12px + var(--safe-r)); bottom: calc(14px + var(--safe-b)); display: flex; gap: 8px; }
+#items .iconbtn { width: 52px; height: 52px; }
+#items .iconbtn svg { width: 28px; height: 28px; }
+#armourIcon { position: absolute; left: calc(12px + var(--safe-l)); bottom: calc(14px + var(--safe-b)); }
+#armourIcon svg { width: 30px; height: 30px; filter: drop-shadow(0 0 6px rgba(255, 220, 140, 0.8)); }
+#toasts { position: fixed; top: calc(64px + var(--safe-t)); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 6; pointer-events: none; }
+.toast {
+  background: rgba(20, 16, 10, 0.72); border: 1px solid rgba(255, 210, 140, 0.4); border-radius: 12px; padding: 7px 14px;
+  font-size: clamp(13px, 3.2vw, 16px); max-width: min(92vw, 520px); animation: toastIn .3s ease-out; text-shadow: none;
+}
+.toast.gold { color: #ffe3a3; }
+.toast small { display: block; opacity: 0.75; font-style: italic; font-size: 0.85em; }
+@keyframes toastIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Game over / lists ---------- */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.stat { background: rgba(255,255,255,0.07); border-radius: 12px; padding: 8px 10px; }
+.stat b { display: block; font-size: 22px; color: var(--gold); font-weight: normal; }
+.stat span { font-size: 12px; opacity: 0.8; letter-spacing: 0.06em; text-transform: uppercase; }
+.newbest { color: #fff; background: #d9822b; border-radius: 6px; padding: 1px 6px; font-size: 11px; margin-left: 4px; vertical-align: middle; }
+.goals { text-align: left; margin: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+.goal { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.07); border-radius: 12px; padding: 8px 10px; font-size: 15px; }
+.goal .tick { width: 24px; height: 24px; border-radius: 50%; flex: none; border: 2px solid rgba(255,220,160,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.goal.done .tick { background: #e9a53a; border-color: #ffd27f; color: #3a2410; }
+.goal.done .gtext { opacity: 0.7; text-decoration: line-through; }
+.goal .gtext { flex: 1; }
+.goal .prog { font-size: 12px; opacity: 0.7; }
+.verseline { font-style: italic; opacity: 0.9; font-size: 15px; margin: 12px 4px 4px; line-height: 1.45; }
+.verseline small { display: block; font-style: normal; font-size: 11px; letter-spacing: 0.18em; opacity: 0.7; margin-top: 4px; text-transform: uppercase; }
+.cause { font-size: 15px; opacity: 0.85; margin-bottom: 6px; }
+.oilbal { display: inline-flex; gap: 6px; align-items: center; font-size: 16px; color: var(--gold); margin-bottom: 10px; }
+.oilbal svg { width: 18px; height: 18px; }
+
+/* ---------- Shop / rider cards ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 8px; }
+.card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.card.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(255, 199, 102, 0.3); }
+.card canvas { width: 96px; height: 80px; }
+.card h3 { margin: 0; font-weight: normal; font-size: 17px; color: #fff1d0; }
+.card p { margin: 0; font-size: 12.5px; opacity: 0.8; line-height: 1.35; min-height: 34px; }
+.card .own { font-size: 12px; opacity: 0.75; }
+.card .ico svg { width: 40px; height: 40px; }
+
+/* ---------- Pause + photo mode ---------- */
+#photoHint { position: fixed; bottom: calc(16px + var(--safe-b)); left: 0; right: 0; text-align: center; font-size: 13px; opacity: 0.7; z-index: 11; pointer-events: none; text-shadow: 0 1px 4px #000; transition: opacity 1s; }
+body.photo #hud, body.photo #toasts, body.photo #pause { display: none !important; }
+
+/* ---------- Parchment level-up card ---------- */
+#levelup { z-index: 20; background: rgba(8, 8, 18, 0.55); }
+.parchment {
+  position: relative; width: min(440px, 92vw); padding: 34px 30px 26px; color: var(--ink);
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(255,255,255,0.55), rgba(255,255,255,0) 45%),
+    radial-gradient(ellipse at 80% 90%, rgba(150, 100, 40, 0.28), rgba(0,0,0,0) 55%),
+    radial-gradient(ellipse at 50% 50%, var(--parch-1), var(--parch-2));
+  border-radius: 6px;
+  box-shadow: 0 0 0 2px #b8904f inset, 0 0 0 7px rgba(184,144,79,0.25) inset, 0 30px 80px rgba(0,0,0,0.5), 0 0 60px rgba(255,200,110,0.35);
+  animation: unroll .6s cubic-bezier(.2,.9,.3,1.2);
+}
+.parchment:before, .parchment:after {
+  content: ""; position: absolute; left: -10px; right: -10px; height: 16px; border-radius: 10px;
+  background: linear-gradient(180deg, #caa46a, #8a6534); box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+.parchment:before { top: -8px; } .parchment:after { bottom: -8px; }
+.parchment .lvl { font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); }
+.parchment h2 { margin: 4px 0 14px; font-weight: normal; font-size: 34px; color: #5a3212; }
+.parchment .vtext { font-size: clamp(17px, 4.4vw, 21px); line-height: 1.5; font-style: italic; }
+.parchment .vref { margin-top: 12px; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); }
+.parchment .reward { margin-top: 12px; font-size: 14px; color: #7a4a14; }
+.parchment .btn { margin-top: 18px; }
+@keyframes unroll { from { transform: scaleY(0.1); opacity: 0; } to { transform: none; opacity: 1; } }
+
+@media (max-width: 560px) {
+  #items { bottom: calc(40px + var(--safe-b)); }
+  #armourIcon { bottom: calc(44px + var(--safe-b)); }
+  #boostWrap { width: 70vw; }
+}
+.portrait-tip { display: none; }
+@media (orientation: portrait) { .portrait-tip { display: inline; } }
+@media (max-width: 420px) {
+  .panel { padding: 16px 14px; }
+  .cards { grid-template-columns: 1fr 1fr; }
+  .btn { padding: 11px 16px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="The Lamp Road game canvas"></canvas>
+
+<!-- ============================ TITLE ============================ -->
+<div id="title" class="screen">
+  <div class="top">
+    <h1>The Lamp Road</h1>
+    <p class="verse">"Thy word is a lamp unto my feet, and a light unto my path."<span class="ref">Psalm 119:105</span></p>
+  </div>
+  <div class="begin">Tap to begin</div>
+  <div class="bottom">
+    <div class="meta" id="titleMeta"></div>
+    <div class="row" style="margin-top:0">
+      <button class="btn ghost small" data-act="riders">Riders</button>
+      <button class="btn ghost small" data-act="workshop">Workshop</button>
+      <button class="btn ghost small" data-act="goals">Goals</button>
+      <button class="btn ghost small" data-act="mute" id="titleMute">Sound: on</button>
+    </div>
+    <div class="howto">Tap or Space to jump. Hold in the air to backflip. Let go to stop spinning and land flat.<br/>Gather lost sheep. Keep ahead of the roaring lion.<span class="portrait-tip"><br/>Tip: turn your phone sideways for a wider view.</span></div>
+  </div>
+</div>
+
+<!-- ============================ HUD ============================ -->
+<div id="hud" class="hidden">
+  <div class="tl">
+    <div id="hudDist">0 m</div>
+    <div id="hudScore">0</div>
+  </div>
+  <div class="tr">
+    <div id="hudChips">
+      <div id="hudChipsRow">
+        <span class="chip" title="Lamp oil"><svg viewBox="0 0 24 24"><path d="M12 2 C12 2 5 10.5 5 15 a7 7 0 0 0 14 0 C19 10.5 12 2 12 2z" fill="#f3b23c"/><ellipse cx="9.5" cy="14" rx="1.6" ry="2.6" fill="#fff3c4" opacity=".8"/></svg><span id="hudOil">0</span></span>
+        <span class="chip" title="Sheep gathered"><svg viewBox="0 0 24 24"><g fill="#f5f1e6"><circle cx="8" cy="12" r="4"/><circle cx="12" cy="10" r="4.4"/><circle cx="15.5" cy="12.5" r="3.8"/><circle cx="11" cy="14.5" r="3.8"/></g><ellipse cx="19.5" cy="11" rx="2.4" ry="2" fill="#2b2622"/><g stroke="#2b2622" stroke-width="1.6"><line x1="9" y1="17" x2="9" y2="21"/><line x1="15" y1="16.5" x2="15" y2="21"/></g></svg><span id="hudSheep">0</span></span>
+      </div>
+    </div>
+    <button class="iconbtn" id="muteBtn" title="Mute (M)" aria-label="Mute"></button>
+    <button class="iconbtn" id="pauseBtn" title="Pause (P)" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="#fff6e6"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="#fff6e6"/></svg></button>
+  </div>
+  <div id="combo" style="opacity:0"><div id="comboNames"></div><div id="comboPts"></div></div>
+  <div id="armourIcon" class="hidden" title="Armour of God"><svg viewBox="0 0 24 24"><path d="M12 2 L20 5 V11 C20 16.5 16.5 20.5 12 22 C7.5 20.5 4 16.5 4 11 V5 Z" fill="#d8c07a" stroke="#fff2c2" stroke-width="1.2"/><path d="M12 6 V18 M8 10 H16" stroke="#6b4d1f" stroke-width="2"/></svg></div>
+  <div id="boostWrap"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7" fill="#ffcf6b" opacity=".35"/><path d="M8 9 h8 l-1 9 h-6 z" fill="#b8863b"/><path d="M12 10 c-1.5 2-1.5 4 0 5.5 c1.5-1.5 1.5-3.5 0-5.5z" fill="#fff1a8"/><path d="M9 9 q3-5 6 0" stroke="#b8863b" stroke-width="1.5" fill="none"/></svg><div id="boostBar"><div id="boostFill"></div></div></div>
+  <div id="items">
+    <button class="iconbtn hidden" id="staffBtn" title="Shepherd's Staff (S)" aria-label="Use Shepherd's Staff"></button>
+    <button class="iconbtn hidden" id="flaskBtn" title="Oil Flask (F)" aria-label="Use Oil Flask"></button>
+  </div>
+</div>
+<div id="toasts"></div>
+
+<!-- ============================ PAUSE ============================ -->
+<div id="pause" class="screen hidden">
+  <div class="panel">
+    <h2>Rest a While</h2>
+    <p class="sub">"He maketh me to lie down in green pastures: he leadeth me beside the still waters." Psalm 23:2</p>
+    <div class="goals" id="pauseGoals"></div>
+    <div class="row">
+      <button class="btn" data-act="resume">Resume</button>
+      <button class="btn ghost" data-act="photo">Photo mode</button>
+    </div>
+    <div class="row">
+      <button class="btn ghost small" data-act="mute" id="pauseMute">Sound: on</button>
+      <button class="btn ghost small" data-act="restart">Restart</button>
+      <button class="btn ghost small" data-act="quit">Quit to title</button>
+    </div>
+  </div>
+</div>
+<div id="photoHint" class="hidden">Photo mode. Tap anywhere to return.</div>
+
+<!-- ============================ GAME OVER ============================ -->
+<div id="gameover" class="screen hidden">
+  <div class="panel">
+    <h2 id="goTitle">Journey's End</h2>
+    <div class="cause" id="goCause"></div>
+    <div class="stats" id="goStats"></div>
+    <div class="goals" id="goGoals"></div>
+    <div class="verseline" id="goVerse"></div>
+    <div class="row">
+      <button class="btn" data-act="again">Ride again</button>
+    </div>
+    <div class="row">
+      <button class="btn ghost small" data-act="workshop">Workshop</button>
+      <button class="btn ghost small" data-act="riders">Riders</button>
+      <button class="btn ghost small" data-act="quit">Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ WORKSHOP ============================ -->
+<div id="workshop" class="screen hidden">
+  <div class="panel">
+    <h2>The Workshop</h2>
+    <p class="sub">Spend lamp oil on gifts for the road. Use them well.</p>
+    <div class="oilbal"><svg viewBox="0 0 24 24"><path d="M12 2 C12 2 5 10.5 5 15 a7 7 0 0 0 14 0 C19 10.5 12 2 12 2z" fill="#f3b23c"/></svg><span id="wsOil">0</span> lamp oil</div>
+    <div class="cards" id="wsCards"></div>
+    <div class="row"><button class="btn" data-act="back">Back</button></div>
+  </div>
+</div>
+
+<!-- ============================ RIDERS ============================ -->
+<div id="riders" class="screen hidden">
+  <div class="panel">
+    <h2>Choose Your Rider</h2>
+    <p class="sub">Each pilgrim has one gift. Unlock riders with lamp oil.</p>
+    <div class="oilbal"><svg viewBox="0 0 24 24"><path d="M12 2 C12 2 5 10.5 5 15 a7 7 0 0 0 14 0 C19 10.5 12 2 12 2z" fill="#f3b23c"/></svg><span id="rdOil">0</span> lamp oil</div>
+    <div class="cards" id="rdCards"></div>
+    <div class="row"><button class="btn" data-act="back">Back</button></div>
+  </div>
+</div>
+
+<!-- ============================ GOALS ============================ -->
+<div id="goalsScreen" class="screen hidden">
+  <div class="panel">
+    <h2 id="glTitle">Goals</h2>
+    <p class="sub">Complete all three to level up and receive a word for the road.</p>
+    <div class="goals" id="glList"></div>
+    <p class="sub" id="glMaps"></p>
+    <div class="row"><button class="btn" data-act="back">Back</button></div>
+  </div>
+</div>
+
+<!-- ============================ LEVEL UP ============================ -->
+<div id="levelup" class="screen hidden">
+  <div class="parchment">
+    <div class="lvl">A step further on the road</div>
+    <h2 id="luLevel">Level 2</h2>
+    <div class="vtext" id="luText"></div>
+    <div class="vref" id="luRef"></div>
+    <div class="reward" id="luReward"></div>
+    <button class="btn" data-act="luClose">Amen, onward</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   THE LAMP ROAD
+   An endless downhill pilgrim snowboarding journey.
+   "Thy word is a lamp unto my feet, and a light unto my path." Psalm 119:105
+
+   Code map:
+     1. Utilities (maths, noise, colour)
+     2. Game data (verses, riders, workshop items, goals)
+     3. Save / load (localStorage)
+     4. Audio (Web Audio: hymn pads, wind, carving, chimes, lion roar)
+     5. World generation (terrain, chasms, rails, obstacles, sheep, pickups, decor)
+     6. Player physics (ground, air, rails, landing, crashes)
+     7. Run logic (combos, boost, lion, goals, sheep, weather, day/night)
+     8. Rendering (sky, parallax, terrain, sprites, lighting, weather)
+     9. UI screens (title, HUD, pause, game over, workshop, riders, goals)
+    10. Input
+    11. Main loop
+   ===================================================================== */
+
+/* =====================================================================
+   1. UTILITIES
+   ===================================================================== */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => t * t * (3 - 2 * t);
+const approach = (v, target, rate) => (v < target ? Math.min(target, v + rate) : Math.max(target, v - rate));
+function wrapAngle(a) {
+  a = a % TAU;
+  if (a > Math.PI) a -= TAU; else if (a < -Math.PI) a += TAU;
+  return a;
+}
+function fmt(n) { return Math.floor(n).toLocaleString('en-AU'); }
+
+/** Small fast seeded RNG (mulberry32). Returns a function giving 0..1. */
+function makeRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/** Deterministic integer hash to 0..1 (used for decor placement and noise). */
+function hash(i, s) {
+  let h = Math.imul((i | 0) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((s | 0) + 0x632be5ab, 0xc2b2ae35);
+  h ^= h >>> 13; h = Math.imul(h, 0x27d4eb2f); h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+/** 1D value noise, -1..1, smooth. */
+function vnoise(x, s) {
+  const i = Math.floor(x), f = x - i;
+  return lerp(hash(i, s), hash(i + 1, s), smooth(f)) * 2 - 1;
+}
+/** Layered (fractal) noise, roughly -1..1. */
+function fbm(x, s, oct) {
+  let sum = 0, amp = 1, freq = 1, norm = 0;
+  for (let o = 0; o < (oct || 4); o++) {
+    sum += vnoise(x * freq, s + o * 31) * amp; norm += amp; amp *= 0.5; freq *= 2.03;
+  }
+  return sum / norm;
+}
+
+/* ---- Colour helpers (colours stored as [r,g,b]) ---- */
+function hex(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mixc(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+function css(c, a) {
+  const r = c[0] | 0, g = c[1] | 0, b = c[2] | 0;
+  return a === undefined ? `rgb(${r},${g},${b})` : `rgba(${r},${g},${b},${a})`;
+}
+
+/* =====================================================================
+   2. GAME DATA
+   ===================================================================== */
+
+/** Encouraging KJV verses shown on level up (rotating) and on game over. */
+const VERSES = [
+  ['But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.', 'Isaiah 40:31'],
+  ['Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.', 'Joshua 1:9'],
+  ['I can do all things through Christ which strengtheneth me.', 'Philippians 4:13'],
+  ['The LORD is my shepherd; I shall not want.', 'Psalm 23:1'],
+  ['Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.', 'Proverbs 3:5-6'],
+  ['Let us lay aside every weight, and the sin which doth so easily beset us, and let us run with patience the race that is set before us.', 'Hebrews 12:1'],
+  ['I will lift up mine eyes unto the hills, from whence cometh my help. My help cometh from the LORD, which made heaven and earth.', 'Psalm 121:1-2'],
+  ['I have fought a good fight, I have finished my course, I have kept the faith.', '2 Timothy 4:7'],
+  ['He maketh my feet like hinds\' feet, and setteth me upon my high places.', 'Psalm 18:33'],
+  ['God is our refuge and strength, a very present help in trouble.', 'Psalm 46:1'],
+  ['Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness.', 'Isaiah 41:10'],
+  ['Come unto me, all ye that labour and are heavy laden, and I will give you rest.', 'Matthew 11:28'],
+  ['I am the light of the world: he that followeth me shall not walk in darkness, but shall have the light of life.', 'John 8:12'],
+  ['The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?', 'Psalm 27:1'],
+  ['And let us not be weary in well doing: for in due season we shall reap, if we faint not.', 'Galatians 6:9'],
+  ['His compassions fail not. They are new every morning: great is thy faithfulness.', 'Lamentations 3:22-23'],
+  ['The steps of a good man are ordered by the LORD: and he delighteth in his way.', 'Psalm 37:23'],
+  ['When thou passest through the waters, I will be with thee; and through the rivers, they shall not overflow thee.', 'Isaiah 43:2'],
+  ['For he shall give his angels charge over thee, to keep thee in all thy ways.', 'Psalm 91:11'],
+  ['I am the good shepherd: the good shepherd giveth his life for the sheep.', 'John 10:11'],
+  ['Rejoice with me; for I have found my sheep which was lost.', 'Luke 15:6'],
+  ['The LORD is good, a strong hold in the day of trouble; and he knoweth them that trust in him.', 'Nahum 1:7'],
+  ['Be strong and of a good courage, fear not, nor be afraid of them: for the LORD thy God, he it is that doth go with thee; he will not fail thee, nor forsake thee.', 'Deuteronomy 31:6'],
+  ['The LORD God is my strength, and he will make my feet like hinds\' feet, and he will make me to walk upon mine high places.', 'Habakkuk 3:19'],
+  ['So run, that ye may obtain.', '1 Corinthians 9:24'],
+];
+const LION_VERSE = ['Be sober, be vigilant; because your adversary the devil, as a roaring lion, walketh about, seeking whom he may devour.', '1 Peter 5:8'];
+const FLEE_VERSE = ['Resist the devil, and he will flee from you.', 'James 4:7'];
+
+/** Riders: each has one stat that differs from the balanced Pilgrim. */
+const RIDERS = [
+  { id: 'pilgrim', name: 'Pilgrim', cost: 0, desc: 'Balanced. Steady on every slope.', cloak: '#7a5230', trim: '#4e3320', stats: {} },
+  { id: 'shepherd', name: 'Shepherd', cost: 150, desc: 'Gathers sheep from twice as far away.', cloak: '#7d8a4e', trim: '#4f5a2c', stats: { gatherR: 105 } },
+  { id: 'watchman', name: 'Watchman', cost: 250, desc: 'Faster. Higher top speed.', cloak: '#4f5f86', trim: '#2f3a57', stats: { accel: 1.12, drag: 0.74 } },
+  { id: 'elder', name: 'Elder', cost: 300, desc: 'Slower, but floaty jumps.', cloak: '#d9d3c5', trim: '#a39c8c', stats: { accel: 0.92, drag: 1.12, grav: 0.72 } },
+  { id: 'stonemason', name: 'Stonemason', cost: 350, desc: 'Keeps balance on walls twice as long.', cloak: '#8a7866', trim: '#5a4c3e', stats: { grindTime: 3.0, grindFric: 0.4 } },
+  { id: 'messenger', name: 'Messenger', cost: 400, desc: 'Spins faster for bigger flips.', cloak: '#a3413a', trim: '#6c2622', stats: { spin: 1.42 } },
+];
+const BASE_STATS = { gatherR: 50, accel: 1, drag: 1, grav: 1, grindTime: 1.5, grindFric: 1, spin: 1, jump: 1 };
+
+/** Workshop: consumable gifts and one permanent upgrade. */
+const ITEMS = [
+  { id: 'staff', name: "Shepherd's Staff", cost: 40, desc: 'Tap in a run: pulls in nearby sheep and oil for 12 seconds.' },
+  { id: 'armour', name: 'Armour of God', cost: 60, desc: 'Survive one crash or fall. Used up when it saves you.' },
+  { id: 'flask', name: 'Oil Flask', cost: 50, desc: 'Tap in a run: refills your boost meter once.' },
+  { id: 'map', name: "Pilgrim's Map", cost: 30, desc: 'Skip a goal you are stuck on (Goals screen).' },
+  { id: 'cloak', name: 'Cloak Glide', cost: 220, perm: true, desc: 'Forever. Tap and hold again while falling level to glide.' },
+];
+
+/** Goal templates. `stat` is read from the per-run stats object. */
+const GOAL_TYPES = [
+  { id: 'flipOne', stat: 'maxFlips', target: l => clamp(1 + Math.floor(l / 3), 1, 4),
+    text: n => ['Land a backflip', 'Do a double backflip', 'Do a triple backflip', 'Do a quadruple backflip'][n - 1] },
+  { id: 'sheep', stat: 'sheep', target: l => Math.min(6 + l * 3, 45), text: n => `Gather ${n} sheep in one run` },
+  { id: 'oil', stat: 'oil', target: l => Math.min(20 + l * 10, 150), text: n => `Collect ${n} oil drops in one run` },
+  { id: 'dist', stat: 'dist', target: l => Math.min(600 + l * 300, 6000), text: n => `Ride ${fmt(n)} m in one run` },
+  { id: 'score', stat: 'score', target: l => Math.min(5000 + l * 4000, 90000), text: n => `Score ${fmt(n)} in one run` },
+  { id: 'flips', stat: 'flips', target: l => Math.min(3 + l * 2, 30), text: n => `Land ${n} backflips in one run` },
+  { id: 'grind', stat: 'grind', target: l => Math.min(2 + l, 14), text: n => `Grind for ${n} seconds in one run` },
+  { id: 'perfect', stat: 'perfects', target: l => Math.min(2 + l, 15), text: n => `Land ${n} perfect landings in one run` },
+  { id: 'air', stat: 'maxAir', target: l => Math.min(1.4 + l * 0.2, 3.2), text: n => `Stay airborne ${n.toFixed(1)} seconds in one jump` },
+  { id: 'mult', stat: 'maxMult', target: l => Math.min(3 + l, 12), text: n => `Reach a x${n} combo` },
+  { id: 'chasm', stat: 'chasms', target: l => Math.min(3 + l * 2, 25), text: n => `Clear ${n} chasms in one run` },
+  { id: 'boost', stat: 'boosts', target: l => Math.min(1 + Math.floor(l / 2), 6), text: n => n === 1 ? 'Fire a Lamp Boost' : `Fire ${n} Lamp Boosts in one run` },
+  { id: 'sparks', stat: 'sparks', target: l => Math.min(40 + l * 20, 300), text: n => `Collect ${n} light sparks in one run` },
+  { id: 'lion', stat: 'lionFled', target: () => 1, minLevel: 2, text: () => 'Outrun the roaring lion' },
+];
+
+/* =====================================================================
+   3. SAVE / LOAD
+   ===================================================================== */
+const SAVE_KEY = 'theLampRoad.save.v1';
+function defaultSave() {
+  return {
+    best: 0, bestDist: 0, oil: 0, level: 1, goals: null, verseIdx: 0,
+    riders: ['pilgrim'], rider: 'pilgrim',
+    items: { staff: 0, armour: 0, flask: 0, map: 0 }, cloak: false,
+    muted: false, totalSheep: 0, runs: 0,
+  };
+}
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return defaultSave();
+    const d = Object.assign(defaultSave(), JSON.parse(raw));
+    d.items = Object.assign(defaultSave().items, d.items || {});
+    if (!Array.isArray(d.riders) || !d.riders.includes('pilgrim')) d.riders = ['pilgrim'];
+    if (!RIDERS.some(r => r.id === d.rider)) d.rider = 'pilgrim';
+    return d;
+  } catch (e) { return defaultSave(); }
+}
+function writeSave() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* storage may be blocked */ }
+}
+let save = loadSave();
+
+/* ---- Goals ---- */
+function makeGoal(level, exclude) {
+  const pool = GOAL_TYPES.filter(g => !exclude.includes(g.id) && (!g.minLevel || level >= g.minLevel));
+  const g = pool[Math.floor(Math.random() * pool.length)];
+  let target = g.target(level);
+  if (g.id === 'air') target = Math.round(target * 10) / 10;
+  return { id: g.id, target, done: false };
+}
+function ensureGoals() {
+  if (!Array.isArray(save.goals) || save.goals.length !== 3 || save.goals.some(g => !GOAL_TYPES.find(t => t.id === g.id))) {
+    save.goals = [];
+    for (let i = 0; i < 3; i++) save.goals.push(makeGoal(save.level, save.goals.map(g => g.id)));
+    writeSave();
+  }
+}
+function goalText(g) { const t = GOAL_TYPES.find(x => x.id === g.id); return t ? t.text(g.target) : ''; }
+function goalStat(g) { const t = GOAL_TYPES.find(x => x.id === g.id); return t ? t.stat : ''; }
+ensureGoals();
+
+/* =====================================================================
+   4. AUDIO (Web Audio API, all synthesised)
+   ===================================================================== */
+const Sound = {
+  ctx: null, master: null, music: null, sfx: null, verb: null,
+  windGain: null, windFilter: null, carveGain: null, carveFilter: null, noiseBuf: null,
+  nextChord: 0, chordIdx: 0, ready: false,
+
+  /** Must be called from a user gesture (browsers block audio before that). */
+  init() {
+    if (this.ready) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = this.ctx = new AC();
+    this.master = ctx.createGain(); this.master.gain.value = save.muted ? 0 : 0.9;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+    this.master.connect(comp); comp.connect(ctx.destination);
+    this.music = ctx.createGain(); this.music.gain.value = 0.32; this.music.connect(this.master);
+    this.sfx = ctx.createGain(); this.sfx.gain.value = 0.7; this.sfx.connect(this.master);
+
+    // Simple "cathedral" echo: feedback delay with a lowpass for the music.
+    const d = ctx.createDelay(1.5); d.delayTime.value = 0.37;
+    const fb = ctx.createGain(); fb.gain.value = 0.42;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+    d.connect(lp); lp.connect(fb); fb.connect(d);
+    this.verb = ctx.createGain(); this.verb.gain.value = 0.5;
+    this.verb.connect(d); lp.connect(this.music);
+
+    // White noise buffer shared by wind, carve and effects.
+    const len = ctx.sampleRate * 2;
+    this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const ch = this.noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+
+    // Wind bed.
+    const wind = ctx.createBufferSource(); wind.buffer = this.noiseBuf; wind.loop = true;
+    this.windFilter = ctx.createBiquadFilter(); this.windFilter.type = 'lowpass'; this.windFilter.frequency.value = 500; this.windFilter.Q.value = 0.7;
+    this.windGain = ctx.createGain(); this.windGain.gain.value = 0;
+    wind.connect(this.windFilter); this.windFilter.connect(this.windGain); this.windGain.connect(this.master); wind.start();
+
+    // Board carving (bandpass noise).
+    const carve = ctx.createBufferSource(); carve.buffer = this.noiseBuf; carve.loop = true; carve.loopStart = 0.5;
+    this.carveFilter = ctx.createBiquadFilter(); this.carveFilter.type = 'bandpass'; this.carveFilter.frequency.value = 900; this.carveFilter.Q.value = 0.8;
+    this.carveGain = ctx.createGain(); this.carveGain.gain.value = 0;
+    carve.connect(this.carveFilter); this.carveFilter.connect(this.carveGain); this.carveGain.connect(this.master); carve.start();
+
+    this.nextChord = ctx.currentTime + 0.2;
+    this.ready = true;
+  },
+
+  setMuted(m) {
+    save.muted = m; writeSave();
+    if (this.ready) this.master.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.05);
+  },
+
+  mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); },
+
+  /** Hymn-like progression, scheduled a little ahead of time. */
+  CHORDS: [[48, 60, 64, 67], [53, 60, 65, 69], [48, 60, 64, 67], [55, 59, 62, 67], [57, 60, 64, 69], [53, 60, 65, 69], [55, 59, 62, 65], [48, 60, 64, 67]],
+  MELODY: [[72, 76], [77, 76], [72, 67], [74, 71], [72, 76], [77, 72], [74, 74], [72, 72]],
+  updateMusic() {
+    if (!this.ready) return;
+    const ctx = this.ctx, dur = 4.2;
+    while (this.nextChord < ctx.currentTime + 0.6) {
+      const t = this.nextChord, chord = this.CHORDS[this.chordIdx % this.CHORDS.length];
+      chord.forEach((m, i) => this.pad(this.mtof(m), t, dur + 0.8, i === 0 ? 0.12 : 0.07));
+      const mel = this.MELODY[this.chordIdx % this.MELODY.length];
+      if (Math.random() < 0.85) this.bell(this.mtof(mel[0]), t + 0.25, 0.05, true);
+      if (Math.random() < 0.6) this.bell(this.mtof(mel[1]), t + dur * 0.5 + 0.2, 0.04, true);
+      this.chordIdx++; this.nextChord += dur;
+    }
+  },
+  pad(f, t, dur, vol) {
+    const ctx = this.ctx;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 1.4);
+    g.gain.setValueAtTime(vol, t + dur - 1.2);
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    const f1 = ctx.createBiquadFilter(); f1.type = 'lowpass'; f1.frequency.value = 1400;
+    [0, 4].forEach((det, k) => {
+      const o = ctx.createOscillator(); o.type = k ? 'sine' : 'triangle';
+      o.frequency.value = f; o.detune.value = det - 2;
+      o.connect(f1); o.start(t); o.stop(t + dur + 0.05);
+    });
+    f1.connect(g); g.connect(this.music); g.connect(this.verb);
+  },
+  /** Soft bell/chime: a few inharmonic sine partials with exponential decay. */
+  bell(f, t, vol, music) {
+    if (!this.ready) return;
+    const ctx = this.ctx; t = t || ctx.currentTime;
+    const out = music ? this.music : this.sfx;
+    [[1, 1], [2.01, 0.4], [3.02, 0.18], [4.2, 0.08]].forEach(([mul, a]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f * mul;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol * a, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6 / mul + 0.3);
+      o.connect(g); g.connect(out); g.connect(this.verb);
+      o.start(t); o.stop(t + 2.2);
+    });
+  },
+  noise(t, dur, vol, type, freq, q, sweepTo) {
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource(); src.buffer = this.noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q || 1;
+    if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(this.sfx);
+    src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+  tone(type, f0, f1, t, dur, vol, dest) {
+    const ctx = this.ctx;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || this.sfx); o.start(t); o.stop(t + dur + 0.05);
+    return o;
+  },
+
+  /* ---- Sound effects ---- */
+  jump() { if (!this.ready) return; const t = this.ctx.currentTime; this.noise(t, 0.18, 0.18, 'highpass', 1500, 0.6); },
+  land(perfect, flips) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.noise(t, 0.2, 0.22, 'lowpass', 700, 0.7);
+    if (perfect || flips) {
+      const base = [72, 76, 79, 84];
+      const n = Math.min(4, 1 + (flips || 0) + (perfect ? 1 : 0));
+      for (let i = 0; i < n; i++) this.bell(this.mtof(base[i]), t + i * 0.07, 0.08);
+    } else this.bell(this.mtof(67), t, 0.04);
+  },
+  oil() { if (!this.ready) return; const t = this.ctx.currentTime; this.tone('sine', 880, 1320, t, 0.18, 0.12); this.bell(1760, t + 0.03, 0.03); },
+  spark() { if (!this.ready) return; const t = this.ctx.currentTime; this.tone('sine', 1900 + Math.random() * 500, null, t, 0.09, 0.04); },
+  baa() {
+    if (!this.ready) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    const f0 = 330 + Math.random() * 80;
+    o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * 0.92, t + 0.45);
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 22; lg.gain.value = 14;
+    lfo.connect(lg); lg.connect(o.frequency);
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 2.5;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o.connect(f); f.connect(g); g.connect(this.sfx);
+    o.start(t); lfo.start(t); o.stop(t + 0.55); lfo.stop(t + 0.55);
+  },
+  crash() {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.noise(t, 0.5, 0.45, 'lowpass', 400, 0.8, 90);
+    this.tone('sine', 120, 45, t, 0.35, 0.35);
+  },
+  roar() {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.noise(t, 1.6, 0.5, 'lowpass', 700, 3, 120);
+    const o = this.tone('sawtooth', 95, 55, t, 1.5, 0.22);
+    const lfo = this.ctx.createOscillator(), lg = this.ctx.createGain();
+    lfo.frequency.value = 28; lg.gain.value = 20; lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + 1.6);
+  },
+  boost() {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.noise(t, 1.2, 0.3, 'bandpass', 300, 1.5, 3000);
+    [72, 76, 79, 84, 88].forEach((m, i) => this.bell(this.mtof(m), t + i * 0.06, 0.06));
+  },
+  thunder(delay) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime + delay;
+    this.noise(t, 2.8, 0.5, 'lowpass', 180, 0.5, 60);
+    this.noise(t + 0.15, 1.5, 0.25, 'lowpass', 400, 0.5, 80);
+  },
+  goal() {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    [67, 72, 76, 79].forEach((m, i) => this.bell(this.mtof(m), t + i * 0.12, 0.09));
+  },
+  click() { if (!this.ready) return; this.tone('sine', 660, 990, this.ctx.currentTime, 0.08, 0.06); },
+
+  /** Continuous layers follow the game state each frame. */
+  updateBeds(wind, carve, carveFreq) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.windGain.gain.setTargetAtTime(wind, t, 0.25);
+    this.windFilter.frequency.setTargetAtTime(300 + wind * 2400, t, 0.3);
+    this.carveGain.gain.setTargetAtTime(carve, t, 0.06);
+    this.carveFilter.frequency.setTargetAtTime(carveFreq, t, 0.08);
+  },
+};
+
+/* =====================================================================
+   5. WORLD GENERATION
+   The track is a list of height samples every DX pixels (y grows downward,
+   so "downhill" means y increases with x). Samples are generated ahead of
+   the rider in "groups": long slopes, big drops, and chasms (approach,
+   kicker lip, gap, landing). After a group is generated it is "populated"
+   with obstacles, sheep, pickups, rails (walls, rope bridges) and decor.
+   ===================================================================== */
+const DX = 12;          // horizontal distance between terrain samples (world px)
+const PXM = 20;         // world px per metre
+const W = {
+  seed: 1, rng: Math.random, base: 0, ys: [], gaps: [],
+  y: 0, slope: 0.22, bump: 0, cur: null, queue: [], group: null, groupCount: 0, sinceChasm: 0,
+  chasms: [], rails: [], obstacles: [], pickups: [], sheep: [], decor: [],
+};
+
+function terrNoise(x) { return fbm(x / 520, W.seed, 3) + 0.35 * vnoise(x / 190, W.seed + 7); }
+function difficulty(x) { return clamp(x / (PXM * 2500), 0, 1); }
+
+function resetWorld(seed) {
+  W.seed = seed; W.rng = makeRng(seed);
+  W.base = 0; W.ys = []; W.gaps = []; W.y = 0; W.slope = 0.22; W.bump = 0;
+  W.cur = null; W.queue = []; W.group = null; W.groupCount = 0; W.sinceChasm = 0;
+  W.chasms = []; W.rails = []; W.obstacles = []; W.pickups = []; W.sheep = []; W.decor = [];
+}
+
+/* ---- Terrain queries ---- */
+function sampleY(idx) { return W.ys[idx - W.base]; }
+function isGap(idx) { return W.gaps[idx - W.base] === 1; }
+/** Ground height at world x, or null over a chasm / outside generated range. */
+function groundAt(x) {
+  const i = Math.floor(x / DX), k = i - W.base;
+  if (k < 0 || k + 1 >= W.ys.length) return null;
+  if (W.gaps[k] || W.gaps[k + 1]) return null;
+  const t = x / DX - i;
+  return W.ys[k] + (W.ys[k + 1] - W.ys[k]) * t;
+}
+/** Smoothed slope dy/dx at x. */
+function groundSlope(x) {
+  const a = groundAt(x - 7), b = groundAt(x + 7);
+  if (a !== null && b !== null) return (b - a) / 14;
+  const k = Math.floor(x / DX) - W.base;
+  if (k >= 0 && k + 1 < W.ys.length) return (W.ys[k + 1] - W.ys[k]) / DX;
+  return 0.3;
+}
+/** Signed curvature term y'' (positive = ground falls away, a crest). */
+function groundCurve(x) {
+  const h = 18, a = groundAt(x - h), b = groundAt(x), c = groundAt(x + h);
+  if (a === null || b === null || c === null) return 0;
+  return (a - 2 * b + c) / (h * h);
+}
+function chasmAt(x) {
+  for (const c of W.chasms) if (x > c.x0 - 1 && x < c.x1 + 1) return c;
+  return null;
+}
+
+/* ---- Rails (stone walls and rope bridges) ---- */
+function railY(r, x) {
+  if (x < r.x0 || x > r.x1) return null;
+  const f = (x - r.x0) / r.step;
+  let i = Math.floor(f); if (i >= r.pts.length - 1) i = r.pts.length - 2;
+  const t = f - i;
+  return r.pts[i] + (r.pts[i + 1] - r.pts[i]) * t;
+}
+function railSlope(r, x) {
+  const f = clamp((x - r.x0) / r.step, 0, r.pts.length - 1.001);
+  const i = Math.floor(f);
+  return (r.pts[i + 1] - r.pts[i]) / r.step;
+}
+
+/* ---- Group planning ---- */
+function planGroup() {
+  const r = W.rng, x0 = (W.base + W.ys.length) * DX, d = difficulty(x0);
+  const G = { x0, kind: 'slope', secs: [], bridge: false };
+  if (W.groupCount === 0) {
+    G.kind = 'start';
+    G.secs.push({ len: 170, slope: 0.25, rate: 0.05, bump: 22 });
+  } else if (W.sinceChasm >= 1 && r() < 0.42 + 0.22 * d) {
+    G.kind = 'chasm';
+    const width = lerp(140, 270, d) + r() * lerp(90, 190, d);
+    const drop = 40 + r() * 150;
+    G.bridge = r() < 0.33;
+    G.secs.push({ len: 42, slope: 0.28, rate: 0.06, bump: 8, tag: 'approach' });
+    if (G.bridge) G.secs.push({ len: 5, slope: 0.12, rate: 0.5, bump: 0, tag: 'lip' });
+    else G.secs.push({ len: 7, slope: -0.2, rate: 0.45, bump: 0, tag: 'kicker' });
+    G.secs.push({ len: Math.max(8, Math.round(width / DX)), slope: drop / width, rate: 1, bump: 0, gap: true, tag: 'gap' });
+    G.secs.push({ len: 48, slope: 0.36, rate: 1, bump: 0, tag: 'landing' });
+    W.sinceChasm = 0;
+  } else if (r() < 0.35) {
+    G.kind = 'drop';
+    G.secs.push({ len: 12, slope: 0.18, rate: 0.12, bump: 0 });
+    G.secs.push({ len: 22 + ((r() * 16) | 0), slope: 0.85 + r() * 0.3, rate: 0.12, bump: 0 });
+    G.secs.push({ len: 55, slope: 0.3, rate: 0.05, bump: 16 });
+    W.sinceChasm++;
+  } else {
+    G.kind = 'slope';
+    G.secs.push({ len: (100 + r() * 130) | 0, slope: 0.17 + r() * 0.25, rate: 0.03, bump: 30 + r() * 55 });
+    W.sinceChasm++;
+  }
+  W.groupCount++;
+  W.group = G; W.queue = G.secs.slice();
+}
+
+function genOne() {
+  const s = W.cur, idx = W.base + W.ys.length, x = idx * DX;
+  if (W.ys.length > 0) {
+    W.slope += (s.slope - W.slope) * s.rate;
+    W.bump += ((s.bump || 0) - W.bump) * 0.05;
+    W.y += W.slope * DX + W.bump * (terrNoise(x) - terrNoise(x - DX));
+  }
+  W.ys.push(W.y); W.gaps.push(s.gap ? 1 : 0);
+  s.left--;
+}
+
+/** Generate terrain (and populate it) up to world x. */
+function ensureGenerated(xTarget) {
+  let guard = 0;
+  while ((W.base + W.ys.length) * DX < xTarget && guard++ < 20000) {
+    if (!W.cur || W.cur.left <= 0) {
+      W.cur = W.queue.shift();
+      if (!W.cur) {
+        if (W.group) populateGroup(W.group);
+        planGroup();
+        W.cur = W.queue.shift();
+      }
+      W.cur.left = W.cur.len;
+      W.cur.i0 = W.base + W.ys.length;
+    }
+    genOne();
+  }
+}
+
+/* ---- Population ---- */
+const SAFE_START = 1500; // no obstacles before this x (first moments of a run)
+
+function addSparkLine(x, n) {
+  for (let i = 0; i < n; i++) {
+    const px = x + i * 38, gy = groundAt(px);
+    if (gy !== null) W.pickups.push({ type: 'spark', x: px, y: gy - 30, taken: false, ph: Math.random() * TAU });
+  }
+}
+function addOilArc(x, high) {
+  const lift = high ? 150 : 85;
+  for (let i = 0; i < 3; i++) {
+    const px = x + i * 58, gy = groundAt(px);
+    if (gy === null) continue;
+    W.pickups.push({ type: 'oil', x: px, y: gy - lift - Math.sin((i / 2) * Math.PI) * 50, taken: false, ph: Math.random() * TAU });
+  }
+}
+function addFlock(x, n) {
+  for (let i = 0; i < n; i++) {
+    const sx = x + i * 30 + W.rng() * 10, gy = groundAt(sx);
+    if (gy === null) continue;
+    W.sheep.push({ x: sx, y: gy, vx: 0, dir: W.rng() < 0.5 ? -1 : 1, t: W.rng() * 3, ph: W.rng() * TAU, gathered: false });
+  }
+}
+function addObstacle(x) {
+  const q = W.rng(), gy = groundAt(x);
+  if (gy === null) return false;
+  let o;
+  if (q < 0.45) o = { type: 'rock', w: 30 + W.rng() * 14, h: 22 + W.rng() * 10 };
+  else if (q < 0.75) o = { type: 'fire', w: 30, h: 22 };
+  else o = { type: 'cart', w: 56, h: 32 };
+  o.x = x; o.gy = gy; o.hit = false; o.seed = (W.rng() * 1000) | 0; o.hitT = 0;
+  W.obstacles.push(o);
+  return true;
+}
+function addWall(wx, wl) {
+  const step = 24, n = Math.ceil(wl / step) + 1, raw = [];
+  for (let i = 0; i < n; i++) {
+    const x = wx + i * step;
+    const g = Math.min(groundAt(x - 30) ?? Infinity, groundAt(x) ?? Infinity, groundAt(x + 30) ?? Infinity);
+    raw.push(g - 34);
+  }
+  // Smooth the top so it grinds nicely, but never let it dip below the ground.
+  let top = raw.slice();
+  for (let pass = 0; pass < 3; pass++) {
+    const nt = top.slice();
+    for (let i = 1; i < n - 1; i++) nt[i] = Math.min(raw[i], (top[i - 1] + top[i] + top[i + 1]) / 3);
+    top = nt;
+  }
+  const g0 = groundAt(wx);
+  top[0] = g0 - 0.5;
+  top[1] = lerp(g0, top[2], 0.55);
+  const r = { kind: 'wall', x0: wx, x1: wx + (n - 1) * step, step, pts: top };
+  W.rails.push(r);
+  for (let x = wx + 80; x < r.x1 - 20; x += 64) W.pickups.push({ type: 'spark', x, y: railY(r, x) - 28, taken: false, ph: Math.random() * TAU });
+}
+function addRope(c) {
+  const width = c.x1 - c.x0, n = Math.max(4, Math.ceil(width / 16) + 1), step = width / (n - 1);
+  const sag = 16 + width * 0.07, pts = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    pts.push(lerp(c.y0, c.y1, t) + sag * 4 * t * (1 - t));
+  }
+  const r = { kind: 'rope', x0: c.x0, x1: c.x1, step, pts };
+  W.rails.push(r);
+  for (let i = 2; i < n - 2; i += 3) W.pickups.push({ type: 'spark', x: c.x0 + i * step, y: pts[i] - 30, taken: false, ph: Math.random() * TAU });
+}
+function addDecor(type, x, s) {
+  const gy = groundAt(x);
+  if (gy === null) return;
+  W.decor.push({ type, x, gy, s: s || 1, seed: (W.rng() * 1000) | 0 });
+}
+
+function populateGroup(G) {
+  const r = W.rng, x0 = G.x0, x1 = (W.base + W.ys.length - 1) * DX, d = difficulty(x0);
+  if (G.kind === 'chasm') {
+    const gs = G.secs.find(s => s.tag === 'gap');
+    const lip = gs.i0 - 1, far = gs.i0 + gs.len;
+    const c = { x0: lip * DX, x1: far * DX, y0: sampleY(lip), y1: sampleY(far), bridge: G.bridge, passed: false };
+    W.chasms.push(c);
+    addSparkLine(x0 + 90, 4);
+    if (G.bridge) addRope(c);
+    else {
+      // Sparks trace a sensible jump arc across the gap.
+      let px = c.x0, py = c.y0, vx = 560, vy = -430, k = 0, apexDone = false;
+      while (px < c.x1 + 40 && k < 60) {
+        px += vx * 0.045; py += vy * 0.045; vy += 1500 * 0.045; k++;
+        if (k % 2 === 0) W.pickups.push({ type: 'spark', x: px, y: py - 22, taken: false, ph: r() * TAU });
+        if (!apexDone && vy > 0) { apexDone = true; if (r() < 0.7) W.pickups.push({ type: 'oil', x: px, y: py - 70, taken: false, ph: 0 }); }
+      }
+    }
+    if (r() < 0.5) addDecor('tower', c.x1 + 170 + r() * 120, 0.9 + r() * 0.3);
+    if (r() < 0.45) addDecor('arch', c.x1 + 520, 1);
+    return;
+  }
+
+  const reserved = [];
+  if (G.kind === 'slope' && x1 - x0 > 1300 && r() < 0.5) {
+    const wx = x0 + 300 + r() * 250, wl = 420 + r() * 650;
+    if (wx + wl < x1 - 200) { addWall(wx, wl); reserved.push([wx - 170, wx + wl + 140]); }
+  }
+  let cx = x0 + (G.kind === 'drop' ? 480 : 220);
+  while (cx < x1 - 160) {
+    const inRes = reserved.some(([a, b]) => cx > a && cx < b);
+    const q = r();
+    if (!inRes && cx > SAFE_START && q < 0.24 + 0.18 * d) {
+      addObstacle(cx);
+      if (r() < 0.3) addSparkLine(cx - 60, 4);
+      cx += 420 + r() * 420 - 160 * d;
+    } else if (q < 0.5) { addSparkLine(cx, 5 + ((r() * 4) | 0)); cx += 330; }
+    else if (q < 0.68 && !inRes) { addFlock(cx, 1 + ((r() * 3.6) | 0)); cx += 270; }
+    else if (q < 0.8) { addOilArc(cx, r() < 0.35); cx += 320; }
+    else cx += 180;
+  }
+  // Decor: cedars, watchtowers, arches and altars along the way.
+  for (let x = x0 + 60; x < x1; x += 90 + r() * 170) if (r() < 0.55) addDecor('cedar', x, 0.7 + r() * 0.7);
+  if (r() < 0.45) addDecor('tower', x0 + r() * (x1 - x0), 0.85 + r() * 0.4);
+  if (r() < 0.35) addDecor('altar', x0 + 200 + r() * (x1 - x0 - 300), 1);
+  if (G.kind !== 'drop' && r() < 0.3) addDecor('arch', x0 + 300 + r() * (x1 - x0 - 400), 1);
+  W.decor.sort((a, b) => a.x - b.x);
+}
+
+/** Drop everything far behind the rider to keep memory flat on long runs. */
+function cullWorld(x) {
+  const keep = o => (o.x1 !== undefined ? o.x1 : o.x) > x;
+  W.chasms = W.chasms.filter(keep);
+  W.rails = W.rails.filter(keep);
+  W.obstacles = W.obstacles.filter(keep);
+  W.pickups = W.pickups.filter(p => !p.taken && p.x > x);
+  W.sheep = W.sheep.filter(s => !s.gathered && s.x > x);
+  W.decor = W.decor.filter(o => o.x > x - 300);
+  const k = Math.floor(x / DX) - W.base - 20;
+  if (k > 200) { W.ys.splice(0, k); W.gaps.splice(0, k); W.base += k; }
+}
+
+/* =====================================================================
+   6. PLAYER PHYSICS
+   Momentum model: on a surface the rider keeps a single speed along the
+   tangent; gravity pushes along the slope, drag caps top speed. Crests
+   launch the rider when speed is too high to stay stuck to the ground.
+   ===================================================================== */
+const CFG = {
+  STEP: 1 / 120,
+  G: 1500,            // gravity (px/s^2)
+  DRAG: 0.00095,      // quadratic drag -> terminal speed around 680 px/s
+  FRIC: 0.02,         // snow friction
+  JUMP: 560,          // jump impulse along the surface normal
+  SPIN: 7.6,          // backflip spin speed (rad/s)
+  LAND_TOL: 0.62,     // max board-vs-ground angle for a safe landing (~35 deg)
+  PERFECT: 0.12,      // perfect landing (~7 deg)
+  MIN_SPEED: 230,     // pilgrim pushes when slower than this
+  TAP_HOLD: 0.09,     // hold longer than this (from the ground) to start spinning
+};
+
+const P = {};           // the pilgrim
+let S = Object.assign({}, BASE_STATS); // active rider stats
+const Input = { down: false, holdT: 0, jumpBuffer: 0, freshPress: false, pointers: new Set() };
+
+function resetPlayer() {
+  Object.assign(P, {
+    x: 240, y: 0, vx: 280, vy: 0, speed: 280, angle: 0, angVel: 0, state: 'ground', rail: null,
+    airT: 0, airRot: 0, glide: false, glideT: 0, grindT: 0, balance: 0, tumbleT: 0, invuln: 0,
+    boostT: 0, hist: [], histT: 0, lampX: 0, lampY: 0, crouch: 0, t: 0,
+  });
+  P.y = groundAt(P.x);
+  P.angle = Math.atan(groundSlope(P.x));
+}
+
+function stepPlayer(dt) {
+  if (P.state === 'dead') return;
+  P.t += dt;
+  P.invuln = Math.max(0, P.invuln - dt);
+  P.boostT = Math.max(0, P.boostT - dt);
+  if (P.tumbleT > 0) P.tumbleT -= dt;
+  Input.jumpBuffer -= dt;
+  if (Input.down) Input.holdT += dt;
+  if (P.state === 'air') airStep(dt); else surfaceStep(dt);
+  Input.freshPress = false;
+  P.speed = Math.hypot(P.vx, P.vy);
+}
+
+function goAir() {
+  P.jumped = false;
+  P.state = 'air'; P.rail = null; P.airT = 0; P.airRot = 0; P.glide = false; P.glideT = 0;
+  if (P.grindT > 0) endGrind();
+}
+
+/** Riding on the ground or grinding a rail. */
+function surfaceStep(dt) {
+  const onRail = P.state === 'rail';
+  const slope = onRail ? railSlope(P.rail, P.x) : groundSlope(P.x);
+  const th = Math.atan(slope), c = Math.cos(th), s = Math.sin(th);
+  let v = P.vx * c + P.vy * s;
+  let acc = CFG.G * s * S.accel - CFG.DRAG * S.drag * v * Math.abs(v) - CFG.FRIC * CFG.G * c * (onRail ? 0.6 * S.grindFric : 1);
+  if (P.tumbleT > 0) acc -= 250;
+  if (P.boostT > 0 && v < 1050) acc += 1300;
+  if (v < CFG.MIN_SPEED && P.tumbleT <= 0) acc += 420;
+  v = Math.max(P.tumbleT > 0 ? 40 : 60, v + acc * dt);
+
+  // Jump (buffered so a tap just before landing still counts).
+  if (Input.jumpBuffer > 0 && P.tumbleT <= 0) {
+    Input.jumpBuffer = 0;
+    const j = CFG.JUMP * S.jump;
+    P.vx = v * c + s * j; P.vy = v * s - c * j;
+    goAir(); P.jumped = true;
+    Sound.jump(); puff(P.x, P.y, 8);
+    return;
+  }
+  P.vx = v * c; P.vy = v * s;
+  const nx = P.x + P.vx * dt;
+
+  if (onRail) {
+    const r = P.rail;
+    P.grindT += dt; run.stats.grind += dt; combo.pts += 160 * dt; combo.timer = 2.4;
+    run.boost = Math.min(1, run.boost + 0.08 * dt);
+    if (nx > r.x1) {
+      // End of the rail: step back onto ground (rope bridge) or drop off (wall).
+      endGrind();
+      const gy = groundAt(nx);
+      P.x = nx;
+      if (r.kind === 'rope' && gy !== null && Math.abs(gy - r.pts[r.pts.length - 1]) < 24) { P.state = 'ground'; P.rail = null; P.y = gy; }
+      else { P.y += P.vy * dt; goAir(); }
+      return;
+    }
+    P.x = nx; P.y = railY(r, nx);
+    if (r.kind === 'wall') {
+      P.balance += dt;
+      if (P.balance > S.grindTime) {          // lost balance: hop off the wall
+        P.vy -= 240; goAir(); toast('Lost balance', null);
+        return;
+      }
+    }
+  } else {
+    // Roll onto a rail that starts here (wall ramp or rope bridge anchor).
+    for (const r of W.rails) {
+      if (r.x0 > P.x - 0.5 && r.x0 <= nx + 0.5) {
+        const ry = railY(r, Math.max(nx, r.x0));
+        if (ry !== null && Math.abs(ry - P.y) < 14) { P.x = Math.max(nx, r.x0); P.y = ry; startGrind(r); return; }
+      }
+    }
+    const gy = groundAt(nx);
+    if (gy === null) { P.x = nx; P.y += P.vy * dt; goAir(); return; }       // rode off a lip
+    // Crest launch: leave the ground when the needed centripetal force beats gravity.
+    const k = groundCurve(nx);
+    if (k > 0 && P.tumbleT <= 0) {
+      const kappa = k / Math.pow(1 + slope * slope, 1.5);
+      if (v * v * kappa > CFG.G * c * 1.35) { P.x = nx; P.y = P.y + P.vy * dt; goAir(); P.jumped = false; return; }
+    }
+    P.x = nx; P.y = gy;
+  }
+  const target = Math.atan(onRail ? railSlope(P.rail, P.x) : groundSlope(P.x));
+  P.angle += wrapAngle(target - P.angle) * Math.min(1, 22 * dt);
+  P.angVel = 0;
+  P.crouch = approach(P.crouch, Input.down ? 1 : 0.25, 6 * dt);
+}
+
+/** Flying: gravity, backflip spin while held, cloak glide, landing checks. */
+function airStep(dt) {
+  P.airT += dt;
+  // Coyote time: skimmed off a bump by accident? A quick press still jumps.
+  if (Input.jumpBuffer > 0 && !P.jumped && P.airT < 0.2 && P.tumbleT <= 0) {
+    Input.jumpBuffer = 0; P.jumped = true;
+    P.vy = Math.min(P.vy, 0) - CFG.JUMP * S.jump * 0.95;
+    Input.holdT = 0;
+    Sound.jump(); puff(P.x, P.y, 6);
+  }
+  // Cloak glide: a NEW press while falling and level opens the cloak.
+  if (Input.freshPress && save.cloak && P.vy > -40 && Math.abs(wrapAngle(P.angle)) < 0.55 && P.tumbleT <= 0) P.glide = true;
+  if (!Input.down) P.glide = false;
+
+  const g = CFG.G * S.grav * (P.glide ? 0.2 : 1);
+  P.vy += g * dt;
+  if (P.tumbleT > 0) {
+    P.angle += 11 * dt;
+  } else if (P.glide) {
+    P.vy = Math.min(P.vy, 95);
+    P.glideT += dt;
+    P.angVel = 0;
+    P.angle += wrapAngle(0.06 - P.angle) * Math.min(1, 6 * dt);
+  } else {
+    const spinning = Input.down && Input.holdT > CFG.TAP_HOLD;
+    const target = spinning ? -CFG.SPIN * S.spin : 0;
+    P.angVel = approach(P.angVel, target, (spinning ? 60 : 85) * dt);
+    P.angle += P.angVel * dt;
+    P.airRot += P.angVel * dt;
+    // Gentle lean toward the slope ahead when not spinning (keeps simple jumps friendly).
+    if (!spinning && Math.abs(P.angVel) < 0.5) {
+      const ga = groundAt(P.x + P.vx * 0.25) !== null ? Math.atan(groundSlope(P.x + P.vx * 0.25)) : 0.3;
+      P.angle = approach(P.angle, P.angle + wrapAngle(ga - P.angle), 1.1 * dt);
+    }
+  }
+  const sp = Math.hypot(P.vx, P.vy);
+  P.vx -= CFG.DRAG * 0.5 * S.drag * P.vx * sp * dt;
+  if (P.boostT > 0 && P.vx < 1000) P.vx += 500 * dt;
+
+  const px = P.x, py = P.y;
+  P.x += P.vx * dt; P.y += P.vy * dt;
+
+  // Rails first (they sit above the ground).
+  for (const r of W.rails) {
+    if (P.x < r.x0 || P.x > r.x1) continue;
+    const ry = railY(r, P.x);
+    if (P.y < ry) continue;
+    const prevRy = railY(r, clamp(px, r.x0, r.x1));
+    const ok = r.kind === 'wall' ? P.y - ry < 40 : py <= prevRy + 3;
+    if (ok) { landOn(r, ry); return; }
+  }
+  const gy = groundAt(P.x);
+  if (gy !== null && P.y >= gy) {
+    const pgy = groundAt(px);
+    if (P.y - gy < 40 || (pgy !== null && py <= pgy + 2)) { landOn(null, gy); return; }
+    // Smacked into a chasm wall: bounce back and fall.
+    P.x = px; P.vx = -Math.abs(P.vx) * 0.2;
+  }
+  if (gy === null) {
+    const c = chasmAt(P.x);
+    if (c && P.y > Math.max(c.y0, c.y1) + 380) fellInChasm(c);
+  }
+}
+
+function landOn(rail, y) {
+  const slope = rail ? railSlope(rail, rail.kind === 'wall' ? Math.max(P.x, rail.x0 + rail.step * 2.5) : P.x) : groundSlope(P.x);
+  const th = Math.atan(slope), c = Math.cos(th), s = Math.sin(th);
+  const diff = Math.abs(wrapAngle(P.angle - th));
+  const airT = P.airT, flipsRaw = Math.abs(P.airRot), glideT = P.glideT;
+  let v = P.vx * c + P.vy * s;
+  P.y = y;
+  P.state = 'ground'; P.rail = null;   // startGrind() below switches to the rail
+  P.angle = th; P.angVel = 0; P.glide = false; P.airRot = 0;
+
+  let crashed = false;
+  if (P.tumbleT <= 0 && diff > CFG.LAND_TOL) crashed = crash('landing ' + diff.toFixed(2) + ' air ' + airT.toFixed(2) + ' ang ' + wrapAngle(P.angle).toFixed(2) + ' th ' + th.toFixed(2));
+  if (P.tumbleT > 0) v *= 0.6;
+
+  if (!crashed && P.tumbleT <= 0 && airT > 0.2) {
+    const flips = Math.floor((flipsRaw + 1.0) / TAU);
+    const perfect = diff < CFG.PERFECT;
+    if (flips > 0) {
+      const names = ['Backflip', 'Double Backflip', 'Triple Backflip', 'Quad Backflip'];
+      addTrick(names[flips - 1] || flips + 'x Backflip', 500 * flips * (1 + 0.5 * (flips - 1)), 0.2 * flips, flips);
+      run.stats.flips += flips;
+      run.stats.maxFlips = Math.max(run.stats.maxFlips, flips);
+    }
+    if (airT > 1.1) addTrick('Big Air', Math.round(180 * airT), 0.08, 1);
+    if (glideT > 0.7) addTrick('Cloak Glide', Math.round(200 * glideT), 0.08, 1);
+    if (perfect && (flips > 0 || airT > 0.6)) { addTrick('Perfect', 150, 0.05, 1); run.stats.perfects++; }
+    run.stats.maxAir = Math.max(run.stats.maxAir, airT);
+    Sound.land(perfect, flips);
+    puff(P.x, y, perfect ? 14 : 8);
+  } else if (!crashed && airT > 0.35) {
+    run.stats.maxAir = Math.max(run.stats.maxAir, airT);
+  }
+  v = Math.max(v * (crashed ? 1 : 0.97), 80);
+  P.vx = v * c; P.vy = v * s;
+  if (rail) startGrind(rail);
+}
+
+function startGrind(r) {
+  P.state = 'rail'; P.rail = r; P.grindT = 0; P.balance = 0;
+  if (P.tumbleT <= 0) addTrick(r.kind === 'rope' ? 'Rope Grind' : 'Wall Grind', 100, 0.05, 1);
+}
+function endGrind() {
+  P.grindT = 0; P.balance = 0;
+}
+
+/** Returns true if the rider actually crashed (armour or boost can prevent it). */
+function crash(reason) {
+  if (P.invuln > 0 || P.boostT > 0 || P.state === 'dead') return false;
+  if (run.armour > 0) {
+    run.armour = 0; save.items.armour = Math.max(0, save.items.armour - 1); writeSave();
+    P.invuln = 1.6; Env.flash = 0.5;
+    toast('The Armour of God held!', 'Put on the whole armour of God. Ephesians 6:11', 'gold');
+    Sound.goal(); updateItemButtons();
+    return false;
+  }
+  run.events.push({ t: run.time, type: 'crash', reason, x: Math.round(P.x) });
+  P.tumbleT = 0.8; P.invuln = 2.2;
+  P.vx *= 0.55; P.vy *= 0.55;
+  run.stats.crashes++;
+  loseCombo();
+  scatterSheep();
+  Sound.crash(); shake = 12;
+  puff(P.x, P.y, 18, '#e8e4dc');
+  if (!Lion.active) spawnLion(1000);
+  else { Lion.rage += 130; Lion.x = Math.max(Lion.x, P.x - 800); Sound.roar(); }
+  return true;
+}
+
+function fellInChasm(c) {
+  if (run.armour > 0) {
+    run.armour = 0; save.items.armour = Math.max(0, save.items.armour - 1); writeSave();
+    P.x = c.x1 + 40; P.y = groundAt(P.x); P.state = 'ground';
+    const th = Math.atan(groundSlope(P.x));
+    P.vx = 380 * Math.cos(th); P.vy = 380 * Math.sin(th); P.angle = th; P.angVel = 0; P.airRot = 0;
+    P.invuln = 2; Env.flash = 0.7;
+    toast('Lifted from the pit! The Armour of God held.', 'He brought me up also out of an horrible pit. Psalm 40:2', 'gold');
+    Sound.goal(); updateItemButtons();
+    return;
+  }
+  die('fell');
+}
+
+function die(cause) {
+  if (P.state === 'dead') return;
+  P.state = 'dead'; run.cause = cause; run.deadT = 0; mode = 'dying';
+  run.events.push({ t: run.time, type: 'die', reason: cause, x: Math.round(P.x) });
+  if (cause === 'lion') { Sound.roar(); shake = 16; } else Sound.crash();
+  Input.down = false;
+}
+
+/* =====================================================================
+   7. RUN LOGIC: combos, boost, lion, sheep, pickups, goals
+   ===================================================================== */
+const run = {};
+const combo = { pts: 0, mult: 0, names: [], timer: 0, flashT: 0, flashText: '' };
+const Lion = { active: false, x: 0, speed: 0, rage: 0, leaveT: 0, alpha: 0, t: 0 };
+let fleeing = [];      // scattered sheep running away (visual only)
+let shake = 0;
+
+function newRunStats() {
+  return { maxFlips: 0, flips: 0, sheep: 0, oil: 0, dist: 0, score: 0, grind: 0, perfects: 0, maxAir: 0,
+    maxMult: 0, chasms: 0, boosts: 0, sparks: 0, lionFled: 0, crashes: 0 };
+}
+function resetRun() {
+  Object.assign(run, {
+    score: 0, dist: 0, oil: 0, sparks: 0, sheep: 0, boost: 0, time: 0, startX: 240,
+    armour: save.items.armour > 0 ? 1 : 0, staffT: 0, usedStaff: false, usedFlask: false,
+    cause: '', deadT: 0, goalT: 0, events: [], cullT: 0, baaT: 0, stats: newRunStats(), completedThisRun: [],
+  });
+  combo.pts = 0; combo.mult = 0; combo.names = []; combo.timer = 0; combo.flashT = 0;
+  Object.assign(Lion, { active: false, x: 0, speed: 0, rage: 0, leaveT: 0, alpha: 0, t: 0 });
+  fleeing = []; particles.length = 0; popups.length = 0; shake = 0;
+}
+
+/* ---- Combo ---- */
+function addTrick(name, pts, fill, multAdd) {
+  combo.pts += pts; combo.mult = Math.min(20, combo.mult + (multAdd || 1));
+  combo.names.push(name); if (combo.names.length > 4) combo.names.shift();
+  combo.timer = 2.4;
+  run.boost = Math.min(1, run.boost + fill);
+  run.stats.maxMult = Math.max(run.stats.maxMult, combo.mult);
+}
+function bankCombo() {
+  if (combo.mult <= 0) return;
+  const total = Math.round(combo.pts * combo.mult);
+  run.score += total;
+  combo.flashText = '+' + fmt(total); combo.flashT = 1.3;
+  combo.pts = 0; combo.mult = 0; combo.names = []; combo.timer = 0;
+}
+function loseCombo() {
+  if (combo.mult > 0) { combo.flashText = 'Combo lost'; combo.flashT = 1.2; }
+  combo.pts = 0; combo.mult = 0; combo.names = []; combo.timer = 0;
+}
+
+/* ---- Boost ---- */
+function fireBoost() {
+  P.boostT = 2.6; run.boost = 0; run.stats.boosts++;
+  Sound.boost(); Env.flash = Math.max(Env.flash, 0.35);
+  toast('Lamp Boost!', 'A light unto my path', 'gold');
+}
+function useStaff() {
+  if (mode !== 'play' || run.usedStaff || save.items.staff <= 0) return;
+  save.items.staff--; writeSave(); run.usedStaff = true; run.staffT = 12;
+  toast("Shepherd's Staff", 'Sheep and oil come to you', 'gold'); Sound.goal(); updateItemButtons();
+}
+function useFlask() {
+  if (mode !== 'play' || run.usedFlask || save.items.flask <= 0) return;
+  save.items.flask--; writeSave(); run.usedFlask = true; run.boost = 1;
+  Sound.oil(); updateItemButtons();
+}
+
+/* ---- Lion ---- */
+function spawnLion(dist) {
+  Object.assign(Lion, { active: true, x: P.x - dist, speed: 380, rage: 40, leaveT: 0, alpha: 0, t: 0 });
+  Sound.roar(); shake = Math.max(shake, 8);
+  toast('A roaring lion is on your trail!', LION_VERSE[0] + ' ' + LION_VERSE[1]);
+}
+function lionFlee() {
+  Lion.active = false; run.stats.lionFled++;
+  toast('The lion fled!', FLEE_VERSE[0] + ' ' + FLEE_VERSE[1], 'gold');
+  Sound.goal();
+}
+function lionY(x) {
+  const g = groundAt(x);
+  if (g !== null) return g;
+  const c = chasmAt(x);
+  if (c) { const t = clamp((x - c.x0) / (c.x1 - c.x0), 0, 1); return lerp(c.y0, c.y1, t) - Math.sin(t * Math.PI) * 90; }
+  return P.y;
+}
+function updateLion(dt) {
+  if (!Lion.active) return;
+  Lion.t += dt; Lion.alpha = Math.min(1, Lion.alpha + dt * 1.5);
+  if (P.state === 'dead') {
+    if (run.cause === 'lion') Lion.x = approach(Lion.x, P.x - 6, 300 * dt);
+    return;
+  }
+  const d = difficulty(P.x);
+  if (P.speed < 210 && P.tumbleT <= 0) Lion.rage += 110 * dt;   // stalling feeds the lion
+  Lion.rage = clamp(Lion.rage - (P.boostT > 0 ? 220 : 16) * dt, 0, 700);
+  const target = 440 + 160 * d + Lion.rage - (P.boostT > 0 ? 220 : 0);
+  Lion.speed = approach(Lion.speed, target, 600 * dt);
+  Lion.x += Lion.speed * dt;
+  const gap = P.x - Lion.x;
+  if (gap < 34) die('lion');
+  else if (gap > 1500) { Lion.leaveT += dt; if (Lion.leaveT > 2.2) lionFlee(); }
+  else Lion.leaveT = 0;
+}
+
+/* ---- Sheep ---- */
+function gatherRadius() { return run.staffT > 0 ? 230 : S.gatherR; }
+function updateSheep(dt) {
+  const R = gatherRadius(), cy = P.y - 14;
+  for (const s of W.sheep) {
+    if (s.gathered) continue;
+    const dx = s.x - P.x;
+    if (dx < -400 || dx > 1600) continue;
+    // Wander a little.
+    s.t -= dt; s.ph += dt * (s.vx ? 9 : 2);
+    if (s.t <= 0) { s.t = 1.5 + Math.random() * 3; s.vx = Math.random() < 0.5 ? 0 : (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 14); if (s.vx) s.dir = Math.sign(s.vx); }
+    if (s.vx) {
+      const nx = s.x + s.vx * dt, gy = groundAt(nx);
+      if (gy === null || groundAt(nx + s.dir * 20) === null) { s.vx = -s.vx; s.dir = -s.dir; } else { s.x = nx; s.y = gy; }
+    }
+    if (P.state === 'dead') continue;
+    const dy = (s.y - 10) - cy;
+    if (dx * dx + dy * dy < R * R) gatherSheep(s);
+  }
+}
+function gatherSheep(s) {
+  s.gathered = true;
+  run.sheep++; run.stats.sheep++;
+  run.score += 100;
+  run.boost = Math.min(1, run.boost + 0.03);
+  addPopup(s.x, s.y - 30, '+1 sheep');
+  sparkle(s.x, s.y - 12, 8, '#fff6d8');
+  if (run.time - run.baaT > 0.35) { Sound.baa(); run.baaT = run.time; }
+}
+function scatterSheep() {
+  const lose = Math.ceil(run.sheep / 2);
+  if (lose > 0) {
+    run.sheep -= lose;
+    for (let i = 0; i < Math.min(lose, 8); i++) {
+      fleeing.push({ x: P.x + (Math.random() - 0.5) * 40, y: P.y - 5, vx: -(120 + Math.random() * 180), vy: -(150 + Math.random() * 200), life: 2.2, ph: Math.random() * TAU });
+    }
+    toast(`The flock scattered! Lost ${lose} sheep.`, null);
+    Sound.baa();
+  }
+}
+function updateFleeing(dt) {
+  for (const f of fleeing) {
+    f.life -= dt; f.ph += dt * 14;
+    f.vy += 1200 * dt; f.x += f.vx * dt; f.y += f.vy * dt;
+    const gy = groundAt(f.x);
+    if (gy !== null && f.y > gy) { f.y = gy; f.vy = -Math.random() * 160; }
+  }
+  fleeing = fleeing.filter(f => f.life > 0);
+}
+
+/* ---- Pickups ---- */
+function updatePickups(dt) {
+  const magnet = run.staffT > 0, cy = P.y - 16;
+  for (const p of W.pickups) {
+    if (p.taken) continue;
+    const dx = p.x - P.x;
+    if (dx < -80 || dx > 300) continue;
+    const dy = p.y - cy;
+    const d2 = dx * dx + dy * dy;
+    if (magnet && d2 < 250 * 250) {
+      const d = Math.sqrt(d2) || 1;
+      p.x -= (dx / d) * 700 * dt; p.y -= (dy / d) * 700 * dt;
+    }
+    if (d2 < 32 * 32) {
+      p.taken = true;
+      if (p.type === 'oil') {
+        run.oil++; run.stats.oil++; run.boost = Math.min(1, run.boost + 0.015);
+        Sound.oil(); sparkle(p.x, p.y, 10, '#ffc766'); addPopup(p.x, p.y - 16, '+1 oil');
+      } else {
+        run.sparks++; run.stats.sparks++; run.score += 10; run.boost = Math.min(1, run.boost + 0.006);
+        Sound.spark(); sparkle(p.x, p.y, 4, '#fffbe6');
+      }
+    }
+  }
+}
+
+/* ---- Obstacles ---- */
+function checkObstacles() {
+  for (const o of W.obstacles) {
+    if (o.hit) continue;
+    const dx = Math.abs(o.x - P.x);
+    if (dx > o.w / 2 + 4) continue;
+    const top = o.gy - o.h;
+    if (P.y > top + 8 && P.y < o.gy + 30) {
+      if (P.boostT > 0 || P.invuln > 0) {
+        if (P.boostT > 0) { o.hit = true; o.hitT = 1; puff(o.x, top, 14, '#bdb7ad'); run.score += 50; addPopup(o.x, top - 20, '+50'); }
+        continue;
+      }
+      o.hit = true; o.hitT = 1;
+      crash('obstacle ' + P.state + ' ' + o.type + ' dy ' + Math.round(P.y - top) + ' vy ' + Math.round(P.vy) + ' airT ' + P.airT.toFixed(2) + ' j ' + P.jumped + ' dx ' + Math.round(P.x - o.x));
+    }
+  }
+}
+
+/* ---- Goals ---- */
+function checkGoals() {
+  run.stats.dist = Math.floor(run.dist);
+  run.stats.score = Math.floor(run.score);
+  for (const g of save.goals) {
+    if (g.done) continue;
+    const v = run.stats[goalStat(g)] || 0;
+    if (v >= g.target) {
+      g.done = true; run.completedThisRun.push(g.id); writeSave();
+      toast('Goal complete!', goalText(g), 'gold'); Sound.goal();
+      if (save.goals.every(x => x.done)) toast('All three goals done!', 'Level up waits at the end of this run', 'gold');
+    }
+  }
+}
+
+/* ---- One fixed physics step of a run ---- */
+function update(dt) {
+  run.time += dt;
+  if (P.state !== 'dead') {
+    const prevX = P.x;
+    stepPlayer(dt);
+    if (P.state !== 'dead') {
+      checkObstacles();
+      updatePickups(dt);
+      const d = (P.x - run.startX) / PXM;
+      if (d > run.dist) { run.score += d - run.dist; run.dist = d; }
+      if (P.state === 'ground' && combo.mult > 0) { combo.timer -= dt; if (combo.timer <= 0) bankCombo(); }
+      if (run.boost >= 1 && P.boostT <= 0) fireBoost();
+      if (run.staffT > 0) run.staffT -= dt;
+      for (const c of W.chasms) if (!c.passed && P.x > c.x1 + 4 && prevX <= c.x1 + 4) { c.passed = true; run.stats.chasms++; }
+      // Trail of positions for the gathered flock to follow.
+      P.histT += dt;
+      if (P.histT >= 1 / 60) { P.histT = 0; P.hist.push(P.x, P.y); if (P.hist.length > 400) P.hist.splice(0, 2); }
+      // Carving snow spray.
+      if (P.state === 'ground' && P.speed > 350 && Math.random() < 0.25) puff(P.x - 12, P.y, 1);
+      if (P.state === 'rail' && Math.random() < 0.3) sparkle(P.x - 8, P.y, 1, P.rail.kind === 'wall' ? '#ffd9a0' : '#fff');
+    }
+  } else {
+    run.deadT += dt;
+    if (run.cause === 'fell') P.y += 500 * dt;
+  }
+  updateSheep(dt);
+  updateFleeing(dt);
+  updateLion(dt);
+  for (const o of W.obstacles) if (o.hitT > 0) o.hitT -= dt;
+
+  run.goalT -= dt;
+  if (run.goalT <= 0 && P.state !== 'dead') { run.goalT = 0.25; checkGoals(); }
+  run.cullT -= dt;
+  if (run.cullT <= 0) { run.cullT = 0.5; ensureGenerated(P.x + 5000); cullWorld(Math.min(P.x, Lion.active ? Lion.x : P.x) - 1600); }
+  if (mode === 'dying' && run.deadT > 1.6) finishRun();
+}
+
+/* =====================================================================
+   8. RENDERING
+   Flat, layered art. Sky gradient, sun/moon/stars, five parallax
+   silhouette layers with mist, the track and its features, sprites,
+   particles, weather, and a night lighting pass lit by the lamp.
+   ===================================================================== */
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+const lightCv = document.createElement('canvas');
+const lctx = lightCv.getContext('2d');
+const LS = 0.5;                       // lighting buffer scale (cheap on mobile)
+let VW = 800, VH = 600, DPR = 1, dprCap = 2;
+const cam = { x: 0, y: 0, z: 1, yAvg: 0, px: 0, py: 0, demoX: 300 };
+const particles = [];
+const popups = [];
+let lights = [];
+
+/* ---- Environment: day/night cycle and weather ---- */
+const CYCLE = 210; // seconds for a full day
+const Env = { day: 0.03, time: 0, wT: 30, snow: 0.3, rain: 0, fog: 0, storm: 0, tSnow: 0.3, tRain: 0, tFog: 0, tStorm: 0, flash: 0, bolt: null, boltT: 0, wind: 20 };
+
+function pickWeather() {
+  const r = Math.random();
+  Env.tSnow = 0; Env.tRain = 0; Env.tFog = 0; Env.tStorm = 0;
+  if (r < 0.32) { /* clear */ }
+  else if (r < 0.62) Env.tSnow = 0.5 + Math.random() * 0.5;
+  else if (r < 0.78) Env.tFog = 0.6 + Math.random() * 0.4;
+  else if (r < 0.9) { Env.tRain = 0.6 + Math.random() * 0.4; }
+  else { Env.tRain = 1; Env.tStorm = 1; Env.tFog = 0.2; }
+  Env.wT = 35 + Math.random() * 40;
+  Env.wind = (Math.random() - 0.3) * 60;
+}
+function lightning() {
+  Env.flash = 0.9; Env.boltT = 0.35;
+  const pts = []; let x = 0.1 + Math.random() * 0.8, y = 0;
+  pts.push([x, y]);
+  while (y < 0.55) { y += 0.04 + Math.random() * 0.06; x += (Math.random() - 0.5) * 0.05; pts.push([x, y]); }
+  Env.bolt = pts;
+  Sound.thunder(0.3 + Math.random() * 1.2);
+}
+function updateEnv(dt) {
+  Env.time += dt;
+  Env.day = (Env.day + dt / CYCLE) % 1;
+  Env.wT -= dt; if (Env.wT <= 0) pickWeather();
+  Env.snow = approach(Env.snow, Env.tSnow, dt * 0.1);
+  Env.rain = approach(Env.rain, Env.tRain, dt * 0.12);
+  Env.fog = approach(Env.fog, Env.tFog, dt * 0.08);
+  Env.storm = approach(Env.storm, Env.tStorm, dt * 0.1);
+  if (Env.storm > 0.5 && Math.random() < dt * 0.09) lightning();
+  Env.flash = Math.max(0, Env.flash - dt * 1.5);
+  Env.boltT -= dt;
+}
+
+/* ---- Palettes for dawn, day, dusk, night (interpolated) ---- */
+function mkPal(o) {
+  return { top: hex(o.top), bot: hex(o.bot), layers: o.layers.map(hex), snow: hex(o.snow), shade: hex(o.shade),
+    deep: hex(o.deep), stone: hex(o.stone), tree: hex(o.tree), sun: hex(o.sun), dark: o.dark };
+}
+const PAL_DAWN = mkPal({ top: '#34406f', bot: '#f5b48a', layers: ['#9c8fb0', '#7f7499', '#645d82', '#4a4768', '#35344f'], snow: '#f7e9e6', shade: '#c4b6d0', deep: '#7a6f92', stone: '#8f8497', tree: '#3d3f55', sun: '#ffd9a0', dark: 0.12 });
+const PAL_DAY = mkPal({ top: '#5c9bd4', bot: '#d9edf7', layers: ['#adc6de', '#8badcb', '#6f92b0', '#557a8c', '#3c5c66'], snow: '#f8fbff', shade: '#c5d7e8', deep: '#8199b0', stone: '#9b9488', tree: '#33514a', sun: '#fff6d8', dark: 0 });
+const PAL_DUSK = mkPal({ top: '#2c2653', bot: '#f08d5b', layers: ['#94708f', '#765a80', '#59466a', '#3e3252', '#2b233e'], snow: '#f7ddd2', shade: '#bf9fb4', deep: '#6c5a7c', stone: '#8a7384', tree: '#2f2a40', sun: '#ffb070', dark: 0.28 });
+const PAL_NIGHT = mkPal({ top: '#050919', bot: '#1c2648', layers: ['#2b3659', '#232d4c', '#1c2541', '#151d35', '#0f152a'], snow: '#9aa9cf', shade: '#65739c', deep: '#2c3558', stone: '#3f4564', tree: '#131a2c', sun: '#e8eeff', dark: 0.72 });
+const PAL_KEYS = [[0, PAL_DAWN], [0.1, PAL_DAY], [0.46, PAL_DAY], [0.56, PAL_DUSK], [0.66, PAL_NIGHT], [0.92, PAL_NIGHT], [1.0001, PAL_DAWN]];
+function getPal(p) {
+  let i = 0;
+  while (i < PAL_KEYS.length - 2 && p >= PAL_KEYS[i + 1][0]) i++;
+  const [pa, A] = PAL_KEYS[i], [pb, B] = PAL_KEYS[i + 1];
+  const t = smooth(clamp((p - pa) / (pb - pa), 0, 1));
+  return {
+    top: mixc(A.top, B.top, t), bot: mixc(A.bot, B.bot, t), layers: A.layers.map((c, k) => mixc(c, B.layers[k], t)),
+    snow: mixc(A.snow, B.snow, t), shade: mixc(A.shade, B.shade, t), deep: mixc(A.deep, B.deep, t),
+    stone: mixc(A.stone, B.stone, t), tree: mixc(A.tree, B.tree, t), sun: mixc(A.sun, B.sun, t), dark: lerp(A.dark, B.dark, t),
+  };
+}
+
+/* ---- Stars (fixed random sky) and weather particles (screen space) ---- */
+const STARS = Array.from({ length: 150 }, () => ({ x: Math.random(), y: Math.random() * 0.6, r: Math.random() * 1.3 + 0.3, tw: Math.random() * TAU }));
+const FLAKES = Array.from({ length: 200 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random(), ph: Math.random() * TAU }));
+const DROPS = Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), s: 0.5 + Math.random() * 0.5 }));
+
+/* ---- Particles and floating text ---- */
+function puff(x, y, n, color) {
+  for (let i = 0; i < n && particles.length < 500; i++) {
+    particles.push({ x, y: y - 2, vx: (Math.random() - 0.7) * 160, vy: -Math.random() * 140, life: 0.6 + Math.random() * 0.4, max: 1, size: 1.5 + Math.random() * 2.5, color: color || '#ffffff', grav: 300, add: false });
+  }
+}
+function sparkle(x, y, n, color) {
+  for (let i = 0; i < n && particles.length < 500; i++) {
+    const a = Math.random() * TAU, s = 40 + Math.random() * 140;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.4 + Math.random() * 0.4, max: 0.8, size: 1.2 + Math.random() * 2, color, grav: 0, add: true });
+  }
+}
+function addPopup(x, y, text) { popups.push({ x, y, text, life: 1 }); if (popups.length > 12) popups.shift(); }
+function updateParticles(dt) {
+  for (const p of particles) { p.life -= dt; p.vy += p.grav * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - 1.5 * dt; }
+  for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
+  for (const p of popups) { p.life -= dt * 0.8; p.y -= 30 * dt; }
+  for (let i = popups.length - 1; i >= 0; i--) if (popups[i].life <= 0) popups.splice(i, 1);
+}
+
+/* ---- Canvas sizing (handles resize and high-DPI) ---- */
+function resize() {
+  VW = Math.max(1, window.innerWidth); VH = Math.max(1, window.innerHeight);
+  DPR = Math.min(window.devicePixelRatio || 1, dprCap);
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  lightCv.width = Math.ceil(VW * LS); lightCv.height = Math.ceil(VH * LS);
+}
+function baseZoom() { return VW < VH ? clamp(VW / 540, 0.45, 1.3) : clamp(Math.min(VW / 1100, VH / 620), 0.5, 2); }
+
+/* ---- Camera ---- */
+function updateCamera(dt) {
+  cam.px = cam.x; cam.py = cam.y;
+  const portrait = VW < VH;
+  let zt = baseZoom(), tx, ty;
+  if (mode === 'play' || mode === 'dying' || mode === 'paused' || mode === 'over') {
+    if (mode === 'play' || mode === 'dying') zt *= 1 - 0.12 * clamp((P.speed - 450) / 500, 0, 1);
+    else zt = cam.z;
+    cam.z += (zt - cam.z) * (1 - Math.exp(-2 * dt));
+    const vw = VW / cam.z, vh = VH / cam.z;
+    tx = P.x - vw * (portrait ? 0.2 : 0.3);
+    const ahead = groundAt(P.x + 350);
+    ty = (ahead !== null ? lerp(P.y, ahead, 0.3) : P.y) - vh * (portrait ? 0.42 : 0.5);
+    if (mode === 'dying' && run.cause === 'fell') ty = cam.y;
+    if (mode === 'paused' || mode === 'over') { tx = cam.x; ty = cam.y; }
+  } else {
+    // Title and menus: a slow scroll down the mountain.
+    cam.demoX += 150 * dt;
+    ensureGenerated(cam.demoX + 4000);
+    cam.z += (zt - cam.z) * (1 - Math.exp(-2 * dt));
+    const vw = VW / cam.z, vh = VH / cam.z;
+    tx = cam.demoX - vw * 0.3;
+    const k = Math.floor(cam.demoX / DX) - W.base;
+    const gy = W.ys[clamp(k, 0, W.ys.length - 1)];
+    ty = gy - vh * 0.42;
+    if (Math.random() < 0.02) cullWorld(cam.demoX - 1500);
+  }
+  cam.x = tx;
+  cam.y += (ty - cam.y) * (1 - Math.exp(-5 * dt));
+  if (Math.abs(ty - cam.y) > 3000) cam.y = ty;
+  cam.yAvg += (cam.y - cam.yAvg) * (1 - Math.exp(-0.6 * dt));
+  if (Math.abs(cam.y - cam.yAvg) > 4000) cam.yAvg = cam.y;
+}
+
+/* ---- Sky ---- */
+function drawSky(pal) {
+  const g = ctx.createLinearGradient(0, 0, 0, VH);
+  g.addColorStop(0, css(pal.top)); g.addColorStop(0.72, css(pal.bot)); g.addColorStop(1, css(pal.bot));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+  const p = Env.day;
+  // Stars
+  const sa = clamp((pal.dark - 0.2) / 0.45, 0, 1);
+  if (sa > 0) {
+    ctx.fillStyle = '#ffffff';
+    for (const s of STARS) {
+      const a = sa * (0.55 + 0.45 * Math.sin(Env.time * 2 + s.tw));
+      ctx.globalAlpha = a;
+      const x = ((s.x * VW - cam.x * cam.z * 0.004) % VW + VW) % VW;
+      ctx.fillRect(x, s.y * VH, s.r, s.r);
+    }
+    ctx.globalAlpha = 1;
+  }
+  // Sun (dawn to dusk)
+  if (p < 0.64) {
+    const t = p / 0.64, x = VW * (0.12 + 0.76 * t), y = VH * (0.62 - 0.46 * Math.sin(Math.PI * t));
+    const a = clamp(Math.sin(Math.PI * t) * 2.5, 0, 1), r = Math.min(VW, VH) * 0.05;
+    const gl = ctx.createRadialGradient(x, y, 0, x, y, r * 6);
+    gl.addColorStop(0, css(pal.sun, 0.55 * a)); gl.addColorStop(1, css(pal.sun, 0));
+    ctx.fillStyle = gl; ctx.fillRect(x - r * 6, y - r * 6, r * 12, r * 12);
+    ctx.fillStyle = css(mixc(pal.sun, [255, 255, 255], 0.5), a);
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+  // Moon (night)
+  if (p > 0.58) {
+    const t = (p - 0.58) / 0.44, x = VW * (0.15 + 0.7 * t), y = VH * (0.55 - 0.42 * Math.sin(Math.PI * clamp(t, 0, 1)));
+    const a = clamp(Math.sin(Math.PI * clamp(t, 0, 1)) * 3, 0, 1) * clamp(pal.dark / 0.5, 0, 1), r = Math.min(VW, VH) * 0.035;
+    const gl = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+    gl.addColorStop(0, `rgba(210,225,255,${0.3 * a})`); gl.addColorStop(1, 'rgba(210,225,255,0)');
+    ctx.fillStyle = gl; ctx.fillRect(x - r * 5, y - r * 5, r * 10, r * 10);
+    ctx.fillStyle = `rgba(240,244,255,${a})`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = css(pal.top, a);
+    ctx.beginPath(); ctx.arc(x + r * 0.45, y - r * 0.2, r * 0.88, 0, TAU); ctx.fill();
+  }
+  if (Env.flash > 0) { ctx.fillStyle = `rgba(215,225,255,${Env.flash * 0.35})`; ctx.fillRect(0, 0, VW, VH); }
+  if (Env.boltT > 0 && Env.bolt) {
+    ctx.strokeStyle = `rgba(240,245,255,${clamp(Env.boltT * 3, 0, 1)})`; ctx.lineWidth = 2;
+    ctx.beginPath(); Env.bolt.forEach(([x, y], i) => (i ? ctx.lineTo(x * VW, y * VH) : ctx.moveTo(x * VW, y * VH))); ctx.stroke();
+  }
+}
+
+/* ---- Parallax silhouette layers ---- */
+const LAYERS = [
+  { f: 0.04, base: 0.6, h: u => { const n = 1 - Math.abs(vnoise(u / 260, 11)); return 0.27 * n * n + 0.07 * (fbm(u / 80, 12, 3) * 0.5 + 0.5); }, snowcap: true },
+  { f: 0.1, base: 0.67, h: u => 0.19 * (fbm(u / 190, 21, 4) * 0.5 + 0.5) + 0.04 * (1 - Math.abs(vnoise(u / 55, 22))), snowcap: true },
+  { f: 0.22, base: 0.74, h: u => 0.1 * (fbm(u / 150, 31, 3) * 0.5 + 0.5), towers: true },
+  { f: 0.4, base: 0.81, h: u => 0.07 * (fbm(u / 120, 41, 3) * 0.5 + 0.5), trees: 13 },
+  { f: 0.62, base: 0.9, h: u => 0.06 * (fbm(u / 100, 51, 3) * 0.5 + 0.5), trees: 24 },
+];
+function drawCedarShape(c, x, y, h, w) {
+  // Cedar of Lebanon: flat, layered tiers on a short trunk.
+  c.fillRect(x - h * 0.03, y - h * 0.35, h * 0.06, h * 0.36);
+  for (let t = 0; t < 4; t++) {
+    const ty = y - h * (0.28 + t * 0.19), tw = (w || h * 0.75) * (1 - t * 0.2);
+    c.moveTo(x - tw / 2, ty);
+    c.quadraticCurveTo(x - tw * 0.1, ty - h * 0.2, x, ty - h * 0.19);
+    c.quadraticCurveTo(x + tw * 0.1, ty - h * 0.2, x + tw / 2, ty);
+    c.closePath();
+  }
+}
+function drawLayers(pal) {
+  // In portrait the mountains live in a landscape-shaped band so they stay in view.
+  const portrait = VW < VH;
+  const H = portrait ? Math.min(VH, VW * 1.35) : VH, U = 1000 / H;
+  const bandTop = portrait ? VH * 0.6 - H * 0.9 : 0;
+  for (let i = 0; i < LAYERS.length; i++) {
+    const L = LAYERS[i];
+    const off = clamp(-(cam.y - cam.yAvg) * cam.z * L.f * 0.6, -H * 0.08, H * 0.08);
+    const u0 = cam.x * cam.z * L.f * U;
+    const col = pal.layers[i];
+    const baseY = bandTop + H * L.base + off;
+    ctx.beginPath(); ctx.moveTo(0, VH);
+    let minY = VH;
+    for (let sx = 0; sx <= VW + 8; sx += 8) {
+      const y = baseY - L.h(u0 + sx * U) * H;
+      if (y < minY) minY = y;
+      ctx.lineTo(sx, y);
+    }
+    ctx.lineTo(VW + 8, VH); ctx.closePath();
+    if (L.snowcap) {
+      const g = ctx.createLinearGradient(0, minY, 0, baseY);
+      g.addColorStop(0, css(mixc(col, pal.snow, 0.55))); g.addColorStop(0.35, css(col)); g.addColorStop(1, css(col));
+      ctx.fillStyle = g;
+    } else ctx.fillStyle = css(col);
+    ctx.fill();
+
+    if (L.towers) {
+      // Distant watchtowers and ruined arches on the hills.
+      const sp = 260, k0 = Math.floor(u0 / sp) - 1, k1 = Math.floor((u0 + VW * U) / sp) + 1;
+      ctx.fillStyle = css(mixc(col, [0, 0, 0], 0.12));
+      const lit = pal.dark > 0.2;
+      for (let k = k0; k <= k1; k++) {
+        const hsh = hash(k, 77);
+        if (hsh > 0.5) continue;
+        const u = k * sp + hash(k, 78) * sp * 0.6, sx = (u - u0) / U, gy = baseY - L.h(u) * H + 3;
+        const s = H * (0.05 + hash(k, 79) * 0.03);
+        if (hsh < 0.33) {
+          const w = s * 0.28;
+          ctx.fillRect(sx - w / 2, gy - s, w, s);
+          for (let m = 0; m < 3; m++) ctx.fillRect(sx - w / 2 + m * w * 0.4, gy - s - w * 0.22, w * 0.22, w * 0.22);
+          if (lit) { ctx.fillStyle = `rgba(255,190,100,${pal.dark})`; ctx.fillRect(sx - 1, gy - s * 0.7, 2, 3); ctx.fillStyle = css(mixc(col, [0, 0, 0], 0.12)); }
+        } else {
+          ctx.beginPath(); ctx.lineWidth = s * 0.1; ctx.strokeStyle = ctx.fillStyle;
+          ctx.moveTo(sx - s * 0.3, gy); ctx.lineTo(sx - s * 0.3, gy - s * 0.4); ctx.arc(sx, gy - s * 0.4, s * 0.3, Math.PI, 0); ctx.lineTo(sx + s * 0.3, gy);
+          ctx.stroke();
+        }
+      }
+    }
+    if (L.trees) {
+      const sp = L.trees, k0 = Math.floor(u0 / sp) - 2, k1 = Math.floor((u0 + VW * U) / sp) + 2;
+      ctx.fillStyle = css(mixc(col, pal.tree, 0.25)); ctx.beginPath();
+      for (let k = k0; k <= k1; k++) {
+        if (hash(k, 40 + i) > 0.62) continue;
+        const u = k * sp + hash(k, 50 + i) * sp * 0.7, sx = (u - u0) / U;
+        const gy = baseY - L.h(u) * H + 2, th = H * (i === 3 ? 0.035 : 0.06) * (0.7 + hash(k, 60 + i) * 0.6);
+        drawCedarShape(ctx, sx, gy, th, th * (0.8 + hash(k, 61) * 0.5));
+      }
+      ctx.fill();
+    }
+    // Mist between layers
+    if (i === 1 || i === 3) {
+      const my = baseY - H * 0.02, g = ctx.createLinearGradient(0, my - H * 0.12, 0, my + H * 0.1);
+      const a = 0.35 + Env.fog * 0.35;
+      g.addColorStop(0, css(pal.bot, 0)); g.addColorStop(0.6, css(pal.bot, a)); g.addColorStop(1, css(pal.bot, 0));
+      ctx.fillStyle = g; ctx.fillRect(0, my - H * 0.12, VW, H * 0.22);
+    }
+  }
+}
+
+/* ---- Rider (also used for the rider select previews) ---- */
+function drawRider(c, rd, o) {
+  const cr = o.crouch || 0, t = o.t || 0, spd = o.spd === undefined ? 0.5 : o.spd;
+  const hipY = -12 + cr * 3.5, sh = -24 + cr * 4.5;
+  const fl = Math.sin(t * 17) * 1.8 * spd;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  // Open cloak (glide)
+  if (o.glide) {
+    c.fillStyle = rd.cloak;
+    c.beginPath(); c.moveTo(0, sh + 1); c.quadraticCurveTo(-18, sh - 10 + fl, -34, sh + 4); c.lineTo(-6, hipY); c.lineTo(8, hipY);
+    c.lineTo(26, sh + 6); c.quadraticCurveTo(14, sh - 8 - fl, 2, sh + 1); c.closePath(); c.fill();
+    c.strokeStyle = rd.trim; c.lineWidth = 1.2; c.stroke();
+  }
+  // Board
+  c.strokeStyle = '#5e3b1f'; c.lineWidth = 4.6;
+  c.beginPath(); c.moveTo(-21, -7); c.quadraticCurveTo(-18, -2, -12, -2); c.lineTo(12, -2); c.quadraticCurveTo(18, -2, 21, -7); c.stroke();
+  c.strokeStyle = '#a8773f'; c.lineWidth = 1.3;
+  c.beginPath(); c.moveTo(-11, -3.3); c.lineTo(11, -3.3); c.stroke();
+  // Legs
+  c.strokeStyle = '#2d2119'; c.lineWidth = 3.2;
+  c.beginPath(); c.moveTo(-5, -4); c.lineTo(-2.5, hipY + 1); c.moveTo(5, -4); c.lineTo(2.5, hipY + 1); c.stroke();
+  // Accessories behind the body
+  if (rd.id === 'shepherd') {
+    c.strokeStyle = '#8a6a3e'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(-7, hipY + 5); c.lineTo(-5, sh - 12); c.arc(-2, sh - 12, 3, Math.PI, 0); c.stroke();
+  } else if (rd.id === 'pilgrim') {
+    c.fillStyle = '#5a3d25'; c.beginPath(); c.ellipse(-7, sh + 5, 4, 5, -0.3, 0, TAU); c.fill();
+  } else if (rd.id === 'watchman') {
+    c.strokeStyle = '#e0cb96'; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(-8, sh + 2); c.quadraticCurveTo(-12, sh + 8, -6, sh + 11); c.stroke();
+  }
+  // Cloak body
+  c.fillStyle = rd.cloak;
+  c.beginPath();
+  c.moveTo(-3, sh);
+  c.quadraticCurveTo(-11, sh + 8, -15 + fl, hipY + 4);
+  c.lineTo(-4, hipY + 1.5); c.lineTo(7, hipY + 1);
+  c.quadraticCurveTo(8.5, sh + 6, 4, sh);
+  c.closePath(); c.fill();
+  c.strokeStyle = rd.trim; c.lineWidth = 1.6;
+  c.beginPath(); c.moveTo(-6, hipY - 2); c.lineTo(6.5, hipY - 2.5); c.stroke();
+  if (rd.id === 'stonemason') { c.fillStyle = '#6f6a66'; c.fillRect(4, hipY - 4, 4, 3); c.fillStyle = '#8a6a3e'; c.fillRect(5.3, hipY - 1, 1.4, 5); }
+  if (rd.id === 'messenger') { c.fillStyle = '#e8d9b5'; c.fillRect(-9, hipY - 7, 6, 4); c.strokeStyle = '#6c2622'; c.lineWidth = 1; c.beginPath(); c.moveTo(-6, hipY - 7); c.lineTo(3, sh + 1); c.stroke(); }
+  // Hood
+  const hx = 1, hy = sh - 5;
+  c.fillStyle = rd.cloak;
+  c.beginPath(); c.arc(hx, hy, 6.3, 0, TAU); c.fill();
+  c.beginPath(); c.moveTo(hx - 4, hy - 4); c.quadraticCurveTo(hx - 9 + fl * 0.5, hy - 2, hx - 11 + fl, hy + 5); c.lineTo(hx - 3, hy + 4); c.closePath(); c.fill();
+  c.fillStyle = '#26190f';
+  c.beginPath(); c.ellipse(hx + 2.6, hy + 0.6, 3, 3.8, 0, 0, TAU); c.fill();
+  c.fillStyle = '#d8a57a'; c.beginPath(); c.arc(hx + 4.3, hy + 1, 1.2, 0, TAU); c.fill();
+  if (rd.id === 'elder') { c.fillStyle = '#f4f1ea'; c.beginPath(); c.moveTo(hx + 1, hy + 3); c.lineTo(hx + 6, hy + 3); c.lineTo(hx + 3, hy + 9); c.closePath(); c.fill(); }
+  c.strokeStyle = rd.trim; c.lineWidth = 1.1; c.beginPath(); c.arc(hx, hy, 6.3, -1.1, 1.4); c.stroke();
+  // Arm and lamp
+  const handX = 11, handY = sh + 8;
+  c.strokeStyle = rd.cloak; c.lineWidth = 3.4;
+  c.beginPath(); c.moveTo(3, sh + 3); c.lineTo(handX, handY); c.stroke();
+  const lx = handX + 1, ly = handY + 3.5;
+  c.strokeStyle = '#8b6a33'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(handX, handY); c.lineTo(lx, ly - 2.5); c.stroke();
+  c.fillStyle = '#b8863b';
+  c.beginPath(); c.moveTo(lx - 2.6, ly - 2.5); c.lineTo(lx + 2.6, ly - 2.5); c.lineTo(lx + 2.1, ly + 3.5); c.lineTo(lx - 2.1, ly + 3.5); c.closePath(); c.fill();
+  c.fillStyle = o.boost ? '#ffffff' : '#fff1a8';
+  c.beginPath(); c.ellipse(lx, ly + 0.5, 1.5, 2.2, 0, 0, TAU); c.fill();
+  return { x: lx, y: ly };
+}
+
+/* ---- Sheep ---- */
+function drawSheep(c, x, y, dir, ph, walking) {
+  c.save(); c.translate(x, y); c.scale(dir, 1);
+  c.strokeStyle = '#2b2622'; c.lineWidth = 2.2; c.lineCap = 'round';
+  c.beginPath();
+  [-7, -3, 4, 8].forEach((lx, i) => { const sw = walking ? Math.sin(ph + i * Math.PI) * 2.2 : 0; c.moveTo(lx, -6); c.lineTo(lx + sw, 0); });
+  c.stroke();
+  c.fillStyle = '#d8d1c0';
+  c.beginPath(); c.ellipse(0, -8, 10, 4.5, 0, 0, TAU); c.fill();
+  c.fillStyle = '#f4f0e5';
+  c.beginPath();
+  c.arc(-6, -11, 5.5, 0, TAU); c.arc(0, -13, 6.5, 0, TAU); c.arc(6, -11, 5.5, 0, TAU); c.arc(-3, -16, 4.2, 0, TAU); c.arc(3.5, -16, 4.2, 0, TAU);
+  c.fill();
+  c.fillStyle = '#2b2622';
+  c.beginPath(); c.ellipse(11, -13, 4.2, 3.3, 0.35, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(8.8, -16, 2.4, 1.2, -0.5, 0, TAU); c.fill();
+  c.restore();
+}
+
+/* ---- The roaring lion ---- */
+function drawLion(c, x, y, t, alpha, leaping) {
+  c.save(); c.globalAlpha = alpha; c.translate(x, y); c.scale(1.25, 1.25);
+  const body = '#141019';
+  c.strokeStyle = body; c.lineCap = 'round'; c.lineWidth = 6;
+  const legs = [[-30, 0], [-20, Math.PI], [6, Math.PI * 0.5], [15, Math.PI * 1.5]];
+  c.beginPath();
+  for (const [lx, o] of legs) {
+    const sw = leaping ? (lx < 0 ? -0.9 : 0.9) : Math.sin(t * 15 + o) * 0.7;
+    c.moveTo(lx, -20); c.lineTo(lx + Math.sin(sw) * 20, -20 + Math.cos(sw) * 20);
+  }
+  c.stroke();
+  // Tail
+  c.lineWidth = 2.5;
+  c.beginPath(); c.moveTo(-36, -30); c.quadraticCurveTo(-52, -34 + Math.sin(t * 6) * 6, -58, -46); c.stroke();
+  c.fillStyle = body; c.beginPath(); c.arc(-58, -47, 3.5, 0, TAU); c.fill();
+  // Body
+  c.beginPath(); c.ellipse(-10, -28, 30, 12, -0.05, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(10, -30, 15, 14, 0, 0, TAU); c.fill();
+  // Mane
+  const mx = 24, my = -38;
+  c.beginPath();
+  for (let i = 0; i <= 18; i++) {
+    const a = (i / 18) * TAU, r = i % 2 ? 13 : 19 + Math.sin(t * 8 + i) * 1.5;
+    const px = mx + Math.cos(a) * r, py = my + Math.sin(a) * r;
+    i ? c.lineTo(px, py) : c.moveTo(px, py);
+  }
+  c.closePath(); c.fill();
+  // Face / jaw (open when roaring)
+  c.beginPath(); c.ellipse(31, -36, 10, 8, 0.1, 0, TAU); c.fill();
+  c.beginPath(); c.moveTo(34, -32); c.lineTo(44, -31); c.lineTo(38, -26 + Math.abs(Math.sin(t * 3)) * 3); c.closePath(); c.fill();
+  // Glowing eyes
+  const ex = 35, ey = -39;
+  const g = c.createRadialGradient(ex, ey, 0, ex, ey, 12);
+  g.addColorStop(0, 'rgba(255,120,40,0.9)'); g.addColorStop(1, 'rgba(255,60,20,0)');
+  c.fillStyle = g; c.fillRect(ex - 12, ey - 12, 24, 24);
+  c.fillStyle = '#ffd27a'; c.beginPath(); c.ellipse(ex, ey, 2.4, 1.3, -0.2, 0, TAU); c.ellipse(ex - 6, ey - 1, 2, 1.2, -0.2, 0, TAU); c.fill();
+  c.restore();
+}
+
+/* ---- Terrain decor ---- */
+function drawDecor(d, pal) {
+  const stone = css(mixc(pal.stone, pal.bot, 0.18)), stoneDark = css(mixc(pal.stone, [0, 0, 0], 0.25));
+  const s = d.s;
+  if (d.type === 'cedar') {
+    ctx.fillStyle = css(mixc(pal.tree, pal.bot, 0.12));
+    ctx.beginPath(); drawCedarShape(ctx, d.x, d.gy + 6, 120 * s, 105 * s); ctx.fill();
+    ctx.fillStyle = css(pal.snow, 0.6);
+    ctx.fillRect(d.x - 30 * s, d.gy + 6 - 120 * s * 0.47, 60 * s, 2.5);
+  } else if (d.type === 'tower') {
+    const w = 44 * s, h = 150 * s, x = d.x - w / 2, y = d.gy + 8 - h;
+    ctx.fillStyle = stone; ctx.fillRect(x, y, w, h);
+    for (let m = 0; m < 4; m++) ctx.fillRect(x - 3 + m * (w + 6) / 3.6, y - 9 * s, 7 * s, 10 * s);
+    ctx.fillStyle = stoneDark;
+    for (let r = 1; r < 7; r++) ctx.fillRect(x, y + r * h / 7, w, 1.4);
+    ctx.fillRect(d.x - 7 * s, d.gy + 8 - 26 * s, 14 * s, 26 * s);
+    const lit = pal.dark > 0.2;
+    ctx.fillStyle = lit ? `rgba(255,190,100,${0.4 + pal.dark * 0.6})` : stoneDark;
+    ctx.fillRect(d.x - 3 * s, y + h * 0.25, 6 * s, 14 * s);
+    if (lit) lights.push({ x: d.x, y: y + h * 0.25 + 7 * s, r: 60, warm: 0.25 });
+  } else if (d.type === 'arch') {
+    const gl = groundAt(d.x - 70), gr = groundAt(d.x + 70);
+    if (gl === null || gr === null) return;
+    const top = Math.min(gl, gr) - 105;
+    ctx.strokeStyle = stone; ctx.lineWidth = 16;
+    ctx.beginPath(); ctx.moveTo(d.x - 70, gl + 6); ctx.lineTo(d.x - 70, top); ctx.arc(d.x, top, 70, Math.PI, 0); ctx.lineTo(d.x + 70, gr + 6); ctx.stroke();
+    ctx.strokeStyle = stoneDark; ctx.lineWidth = 2;
+    for (let a = 0; a <= 6; a++) { const an = Math.PI + (a / 6) * Math.PI; ctx.beginPath(); ctx.moveTo(d.x + Math.cos(an) * 62, top + Math.sin(an) * 62); ctx.lineTo(d.x + Math.cos(an) * 78, top + Math.sin(an) * 78); ctx.stroke(); }
+    ctx.strokeStyle = css(pal.snow, 0.8); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(d.x, top, 78, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  } else if (d.type === 'altar') {
+    const x = d.x, y = d.gy + 4;
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 26, y - 12, 52, 12); ctx.fillRect(x - 21, y - 24, 42, 12); ctx.fillRect(x - 25, y - 30, 50, 7);
+    ctx.fillStyle = stoneDark; ctx.fillRect(x - 26, y - 12, 52, 1.5); ctx.fillRect(x - 21, y - 24, 42, 1.5);
+    ctx.fillRect(x - 8, y - 24, 1.5, 12); ctx.fillRect(x + 8, y - 12, 1.5, 12);
+    if (pal.dark > 0.15) {
+      const fh = 10 + Math.sin(Env.time * 11 + d.seed) * 2;
+      drawFlame(x, y - 30, 7, fh);
+      lights.push({ x, y: y - 36, r: 110, warm: 0.5 });
+    }
+  }
+}
+function drawFlame(x, base, w, h) {
+  ctx.fillStyle = '#ff8a2b';
+  ctx.beginPath(); ctx.moveTo(x - w, base); ctx.quadraticCurveTo(x - w, base - h * 0.5, x, base - h); ctx.quadraticCurveTo(x + w, base - h * 0.5, x + w, base); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ffd35c';
+  ctx.beginPath(); ctx.moveTo(x - w * 0.5, base); ctx.quadraticCurveTo(x - w * 0.5, base - h * 0.35, x, base - h * 0.6); ctx.quadraticCurveTo(x + w * 0.5, base - h * 0.35, x + w * 0.5, base); ctx.closePath(); ctx.fill();
+}
+
+/* ---- Obstacles ---- */
+function drawObstacle(o, pal) {
+  const x = o.x, gy = o.gy, w = o.w, h = o.h;
+  ctx.save();
+  if (o.hitT > 0 && o.hit) { ctx.globalAlpha = 0.5 + 0.5 * Math.sin(o.hitT * 30); }
+  if (o.type === 'rock') {
+    ctx.fillStyle = css(mixc([108, 104, 116], pal.deep, 0.35));
+    ctx.beginPath(); ctx.moveTo(x - w / 2, gy + 6); ctx.lineTo(x - w / 2 + 3, gy - h * 0.6); ctx.lineTo(x - w * 0.12, gy - h); ctx.lineTo(x + w * 0.25, gy - h * 0.88); ctx.lineTo(x + w / 2, gy - h * 0.3); ctx.lineTo(x + w / 2, gy + 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = css(mixc([150, 146, 158], pal.deep, 0.3));
+    ctx.beginPath(); ctx.moveTo(x - w * 0.12, gy - h); ctx.lineTo(x + w * 0.25, gy - h * 0.88); ctx.lineTo(x + w * 0.05, gy - h * 0.2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = css(pal.snow);
+    ctx.beginPath(); ctx.moveTo(x - w * 0.32, gy - h * 0.8); ctx.lineTo(x - w * 0.12, gy - h - 2); ctx.lineTo(x + w * 0.25, gy - h * 0.9 - 2); ctx.lineTo(x + w * 0.1, gy - h * 0.75); ctx.closePath(); ctx.fill();
+  } else if (o.type === 'fire') {
+    ctx.fillStyle = css(mixc([120, 116, 110], pal.deep, 0.4));
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.ellipse(x + i * 6.5, gy + 1, 4, 3, 0, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = '#5b3a1e'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x - 11, gy - 1); ctx.lineTo(x + 9, gy - 9); ctx.moveTo(x + 11, gy - 1); ctx.lineTo(x - 9, gy - 9); ctx.stroke();
+    if (!o.hit) {
+      const tt = Env.time * 12 + o.seed;
+      drawFlame(x - 5, gy - 5, 6, 18 + Math.sin(tt) * 4);
+      drawFlame(x + 5, gy - 5, 6, 15 + Math.sin(tt * 1.3 + 1) * 4);
+      drawFlame(x, gy - 5, 8, 24 + Math.sin(tt * 0.9 + 2) * 5);
+      lights.push({ x, y: gy - 16, r: 150, warm: 0.7 });
+      if (Math.random() < 0.08) particles.push({ x: x + (Math.random() - 0.5) * 10, y: gy - 20, vx: (Math.random() - 0.5) * 30, vy: -60 - Math.random() * 60, life: 0.9, max: 0.9, size: 1.5, color: '#ffb35c', grav: -20, add: true });
+    }
+  } else {
+    // Broken cart
+    ctx.translate(x, gy); ctx.rotate(-0.12);
+    ctx.fillStyle = '#6e4a2a'; ctx.fillRect(-w / 2, -h, w * 0.85, h * 0.6);
+    ctx.fillStyle = '#4f331c';
+    for (let i = 1; i < 4; i++) ctx.fillRect(-w / 2, -h + i * h * 0.15, w * 0.85, 1.4);
+    ctx.fillRect(-w / 2 + 4, -h - 8, 4, 10); ctx.fillRect(w * 0.2, -h - 5, 4, 7);
+    ctx.strokeStyle = '#5b3a1e'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(-w * 0.18, -h * 0.28, h * 0.3, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 1.5;
+    for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; ctx.beginPath(); ctx.moveTo(-w * 0.18 - Math.cos(an) * h * 0.3, -h * 0.28 - Math.sin(an) * h * 0.3); ctx.lineTo(-w * 0.18 + Math.cos(an) * h * 0.3, -h * 0.28 + Math.sin(an) * h * 0.3); ctx.stroke(); }
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(w * 0.38, -2, h * 0.25, Math.PI, Math.PI * 1.7); ctx.stroke();
+    ctx.fillStyle = css(pal.snow); ctx.fillRect(-w / 2, -h - 2, w * 0.85, 3);
+  }
+  ctx.restore();
+}
+
+/* ---- Rails ---- */
+function drawRail(r, pal) {
+  if (r.kind === 'wall') {
+    ctx.fillStyle = css(pal.stone);
+    ctx.beginPath(); ctx.moveTo(r.x0, r.pts[0]);
+    for (let i = 1; i < r.pts.length; i++) ctx.lineTo(r.x0 + i * r.step, r.pts[i]);
+    for (let i = r.pts.length - 1; i >= 0; i--) { const x = r.x0 + i * r.step; ctx.lineTo(x, (groundAt(x) ?? r.pts[i] + 34) + 6); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = css(mixc(pal.stone, [0, 0, 0], 0.3)); ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    for (let i = 2; i < r.pts.length; i++) {
+      const x = r.x0 + i * r.step, y = r.pts[i];
+      ctx.moveTo(x - r.step, y + 12); ctx.lineTo(x, y + 12);
+      ctx.moveTo(x - r.step, y + 24); ctx.lineTo(x, y + 24);
+      ctx.moveTo(x, y); ctx.lineTo(x, y + 12);
+      ctx.moveTo(x - r.step / 2, y + 12); ctx.lineTo(x - r.step / 2, y + 24);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = css(pal.snow); ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(r.x0 + r.step * 2, r.pts[2] - 1);
+    for (let i = 3; i < r.pts.length; i++) ctx.lineTo(r.x0 + i * r.step, r.pts[i] - 1);
+    ctx.stroke();
+  } else {
+    const n = r.pts.length, x0 = r.x0, x1 = r.x1, y0 = r.pts[0], y1 = r.pts[n - 1];
+    ctx.strokeStyle = '#4f361f'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x0 - 3, y0 + 8); ctx.lineTo(x0 - 3, y0 - 38); ctx.moveTo(x1 + 3, y1 + 8); ctx.lineTo(x1 + 3, y1 - 38); ctx.stroke();
+    ctx.strokeStyle = '#8b6b43'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) { const x = x0 + i * r.step, y = r.pts[i] - 30 + (r.pts[i] - lerp(y0, y1, i / (n - 1))) * 0.2; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y - 8); }
+    ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < n; i += 2) { const x = x0 + i * r.step, y = r.pts[i]; ctx.moveTo(x, y); ctx.lineTo(x, y - 30 + (r.pts[i] - lerp(y0, y1, i / (n - 1))) * 0.2); }
+    ctx.stroke();
+    ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(x0, y0);
+    for (let i = 1; i < n; i++) ctx.lineTo(x0 + i * r.step, r.pts[i]);
+    ctx.stroke();
+    ctx.fillStyle = '#6b4a2a';
+    for (let i = 0; i < n; i++) ctx.fillRect(x0 + i * r.step - 5, r.pts[i] - 1, 10, 4.5);
+  }
+}
+
+/* ---- Terrain ---- */
+function drawTerrain(pal, x0, x1, bottom) {
+  const i0 = Math.max(W.base, Math.floor(x0 / DX) - 1), i1 = Math.min(W.base + W.ys.length - 1, Math.ceil(x1 / DX) + 1);
+  const snow = css(pal.snow), shade = css(pal.shade), deep = css(pal.deep), rim = css(mixc(pal.snow, [255, 255, 255], 0.6));
+  const cliff = css(mixc(pal.deep, [0, 0, 0], 0.3));
+  let k = i0;
+  while (k <= i1) {
+    while (k <= i1 && isGap(k)) k++;
+    if (k > i1) break;
+    const s = k;
+    while (k <= i1 && !isGap(k)) k++;
+    const e = k - 1;
+    if (e <= s) continue;
+    // Body (shade), deep band, bright snow band, rim light.
+    ctx.fillStyle = shade;
+    ctx.beginPath(); ctx.moveTo(s * DX, bottom);
+    for (let i = s; i <= e; i++) ctx.lineTo(i * DX, sampleY(i));
+    ctx.lineTo(e * DX, bottom); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = deep;
+    ctx.beginPath(); ctx.moveTo(s * DX, bottom);
+    for (let i = s; i <= e; i++) ctx.lineTo(i * DX, sampleY(i) + 70);
+    ctx.lineTo(e * DX, bottom); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = snow;
+    ctx.beginPath(); ctx.moveTo(s * DX, sampleY(s));
+    for (let i = s + 1; i <= e; i++) ctx.lineTo(i * DX, sampleY(i));
+    for (let i = e; i >= s; i--) ctx.lineTo(i * DX, sampleY(i) + 16);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = rim; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(s * DX, sampleY(s));
+    for (let i = s + 1; i <= e; i++) ctx.lineTo(i * DX, sampleY(i));
+    ctx.stroke();
+    // Cliff faces at chasm edges.
+    ctx.fillStyle = cliff;
+    if (isGap(e + 1)) ctx.fillRect(e * DX - 7, sampleY(e) + 3, 7, bottom - sampleY(e));
+    if (isGap(s - 1)) ctx.fillRect(s * DX, sampleY(s) + 3, 7, bottom - sampleY(s));
+  }
+}
+
+/* ---- Everything in world space ---- */
+function drawWorld(pal) {
+  const vw = VW / cam.z, vh = VH / cam.z;
+  const x0 = cam.x - 120, x1 = cam.x + vw + 120, bottom = cam.y + vh + 60;
+  const inView = x => x > x0 - 150 && x < x1 + 150;
+
+  for (const d of W.decor) if (inView(d.x)) drawDecor(d, pal);
+  // Mist rising out of each chasm.
+  for (const c of W.chasms) {
+    if (c.x1 < x0 || c.x0 > x1) continue;
+    const top = Math.min(c.y0, c.y1) + 20;
+    const g = ctx.createLinearGradient(0, top, 0, top + 500);
+    g.addColorStop(0, css(pal.bot, 0)); g.addColorStop(1, css(pal.bot, 0.85));
+    ctx.fillStyle = g; ctx.fillRect(c.x0, top, c.x1 - c.x0, Math.max(10, bottom - top));
+  }
+  drawTerrain(pal, x0, x1, bottom);
+  for (const r of W.rails) if (r.x1 > x0 && r.x0 < x1) drawRail(r, pal);
+  for (const o of W.obstacles) if (inView(o.x)) drawObstacle(o, pal);
+
+  // Pickups: oil drops and sparks.
+  for (const p of W.pickups) {
+    if (p.taken || !inView(p.x)) continue;
+    const bob = Math.sin(Env.time * 3 + p.ph) * 3;
+    if (p.type === 'oil') {
+      const y = p.y + bob;
+      const g = ctx.createRadialGradient(p.x, y, 0, p.x, y, 22);
+      g.addColorStop(0, 'rgba(255,200,90,0.55)'); g.addColorStop(1, 'rgba(255,170,60,0)');
+      ctx.fillStyle = g; ctx.fillRect(p.x - 22, y - 22, 44, 44);
+      ctx.fillStyle = '#f0a92e';
+      ctx.beginPath(); ctx.moveTo(p.x, y - 11); ctx.quadraticCurveTo(p.x + 8, y + 0, p.x + 6.5, y + 4); ctx.arc(p.x, y + 4, 6.5, 0, Math.PI); ctx.quadraticCurveTo(p.x - 8, y, p.x, y - 11); ctx.fill();
+      ctx.fillStyle = '#fff3c4'; ctx.beginPath(); ctx.ellipse(p.x - 2.3, y + 2, 1.5, 2.6, 0.3, 0, TAU); ctx.fill();
+      lights.push({ x: p.x, y, r: 40, warm: 0.3 });
+    } else {
+      const y = p.y + bob * 0.6, tw = 0.7 + 0.3 * Math.sin(Env.time * 8 + p.ph), r = 7 * tw;
+      ctx.fillStyle = 'rgba(255,240,190,0.35)'; ctx.beginPath(); ctx.arc(p.x, y, r * 1.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fffbe8';
+      ctx.beginPath(); ctx.moveTo(p.x, y - r); ctx.lineTo(p.x + r * 0.25, y - r * 0.25); ctx.lineTo(p.x + r, y); ctx.lineTo(p.x + r * 0.25, y + r * 0.25);
+      ctx.lineTo(p.x, y + r); ctx.lineTo(p.x - r * 0.25, y + r * 0.25); ctx.lineTo(p.x - r, y); ctx.lineTo(p.x - r * 0.25, y - r * 0.25); ctx.closePath(); ctx.fill();
+    }
+  }
+  // Lost sheep on the slopes.
+  for (const s of W.sheep) if (!s.gathered && inView(s.x)) drawSheep(ctx, s.x, s.y, s.dir, s.ph, !!s.vx);
+  for (const f of fleeing) { ctx.globalAlpha = clamp(f.life, 0, 1); drawSheep(ctx, f.x, f.y, -1, f.ph, true); ctx.globalAlpha = 1; }
+
+  const inRun = mode === 'play' || mode === 'dying' || mode === 'paused' || mode === 'over';
+  if (inRun) {
+    // Gathered flock follows the pilgrim's path.
+    const n = Math.min(run.sheep, 6), H = P.hist;
+    for (let i = n - 1; i >= 0; i--) {
+      const idx = H.length - 2 - (i + 1) * 20;
+      if (idx < 0) continue;
+      drawSheep(ctx, H[idx], H[idx + 1], 1, Env.time * 12 + i, true);
+    }
+    if (Lion.active || (run.cause === 'lion' && P.state === 'dead')) {
+      const ly = lionY(Lion.x);
+      drawLion(ctx, Lion.x, ly, Lion.t, Lion.alpha, groundAt(Lion.x) === null);
+    }
+    if (!(P.state === 'dead' && run.cause === 'fell' && run.deadT > 0.8)) {
+      ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(P.angle);
+      if (P.invuln > 0 && P.tumbleT <= 0 && Math.sin(P.t * 30) > 0.3) ctx.globalAlpha = 0.55;
+      const rd = RIDERS.find(r => r.id === save.rider) || RIDERS[0];
+      const lamp = drawRider(ctx, rd, { crouch: P.state === 'air' ? 0.2 : P.crouch, glide: P.glide, t: P.t, spd: clamp(P.speed / 700, 0.2, 1), boost: P.boostT > 0 });
+      ctx.restore();
+      const ca = Math.cos(P.angle), sa = Math.sin(P.angle);
+      P.lampX = P.x + lamp.x * ca - lamp.y * sa; P.lampY = P.y + lamp.x * sa + lamp.y * ca;
+      const flick = 1 + Math.sin(Env.time * 13) * 0.04 + Math.sin(Env.time * 7.3) * 0.04;
+      lights.push({ x: P.lampX, y: P.lampY, r: (P.boostT > 0 ? 520 : 290) * flick, warm: P.boostT > 0 ? 1.2 : 0.8, lamp: true });
+    }
+  }
+  // Particles
+  for (const p of particles) {
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+    ctx.fillStyle = p.color;
+    if (p.add) { ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+    else ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  // Floating text
+  ctx.font = 'bold 15px Georgia, serif'; ctx.textAlign = 'center';
+  for (const p of popups) {
+    ctx.globalAlpha = clamp(p.life, 0, 1);
+    ctx.fillStyle = 'rgba(40,24,10,0.6)'; ctx.fillText(p.text, p.x + 1, p.y + 1);
+    ctx.fillStyle = '#fff2c8'; ctx.fillText(p.text, p.x, p.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---- Weather (screen space) ---- */
+function drawWeather(dt, pal) {
+  const dxs = (cam.x - cam.px) * cam.z, dys = (cam.y - cam.py) * cam.z;
+  const nS = Math.floor(Env.snow * FLAKES.length);
+  if (nS > 0) {
+    ctx.fillStyle = pal.dark > 0.4 ? 'rgba(220,228,255,0.8)' : 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    for (let i = 0; i < nS; i++) {
+      const f = FLAKES[i], par = 0.35 + f.s * 0.8;
+      f.x -= (dxs * par - (Env.wind + Math.sin(Env.time + f.ph) * 20) * dt) / VW;
+      f.y += ((25 + f.s * 45) * dt - dys * par) / VH;
+      f.x = ((f.x % 1) + 1) % 1; f.y = ((f.y % 1) + 1) % 1;
+      const r = 0.8 + f.s * 2.2;
+      ctx.moveTo(f.x * VW + r, f.y * VH); ctx.arc(f.x * VW, f.y * VH, r, 0, TAU);
+    }
+    ctx.fill();
+  }
+  const nR = Math.floor(Env.rain * DROPS.length);
+  if (nR > 0) {
+    ctx.strokeStyle = pal.dark > 0.4 ? 'rgba(150,170,210,0.45)' : 'rgba(170,190,220,0.55)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < nR; i++) {
+      const d = DROPS[i];
+      d.x -= (dxs * d.s * 0.9 + 60 * dt) / VW; d.y += (900 * d.s * dt - dys * d.s) / VH;
+      d.x = ((d.x % 1) + 1) % 1; d.y = ((d.y % 1) + 1) % 1;
+      const x = d.x * VW, y = d.y * VH;
+      ctx.moveTo(x, y); ctx.lineTo(x + 3 + dxs * 0.4, y - 16 * d.s);
+    }
+    ctx.stroke();
+  }
+  if (Env.fog > 0.01) {
+    ctx.fillStyle = css(pal.bot, Env.fog * 0.22); ctx.fillRect(0, 0, VW, VH);
+    for (let i = 0; i < 3; i++) {
+      const x = (((i * 0.41 + Env.time * 0.012 * (i + 1) - cam.x * cam.z * 0.0002 * (i + 1)) % 1.6 + 1.6) % 1.6 - 0.3) * VW;
+      const y = VH * (0.5 + i * 0.15), r = VH * 0.35;
+      ctx.save(); ctx.translate(x, y); ctx.scale(3, 1);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+      g.addColorStop(0, css(pal.bot, Env.fog * 0.5)); g.addColorStop(1, css(pal.bot, 0));
+      ctx.fillStyle = g; ctx.fillRect(-r, -r, 2 * r, 2 * r); ctx.restore();
+    }
+  }
+}
+
+/* ---- Night lighting: darkness with holes cut by the lamp and fires ---- */
+function drawLighting(pal) {
+  const dark = clamp(pal.dark + Env.storm * 0.12 + Env.rain * 0.05, 0, 0.85) * (1 - Env.flash * 0.7);
+  const z = cam.z;
+  if (dark > 0.03) {
+    const lw = lightCv.width, lh = lightCv.height;
+    lctx.globalCompositeOperation = 'source-over';
+    lctx.clearRect(0, 0, lw, lh);
+    lctx.fillStyle = `rgba(4,6,22,${dark})`; lctx.fillRect(0, 0, lw, lh);
+    lctx.globalCompositeOperation = 'destination-out';
+    for (const L of lights) {
+      const sx = (L.x - cam.x) * z * LS, sy = (L.y - cam.y) * z * LS, r = L.r * z * LS;
+      if (sx < -r || sy < -r || sx > lw + r || sy > lh + r) continue;
+      const g = lctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.45, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      lctx.fillStyle = g; lctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+    }
+    ctx.drawImage(lightCv, 0, 0, VW, VH);
+  }
+  // Warm additive glow (always a little; strong at night).
+  ctx.globalCompositeOperation = 'lighter';
+  for (const L of lights) {
+    const sx = (L.x - cam.x) * z, sy = (L.y - cam.y) * z, r = L.r * z * 0.6;
+    if (sx < -r || sy < -r || sx > VW + r || sy > VH + r) continue;
+    const a = L.warm * (0.12 + dark * 0.35);
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+    g.addColorStop(0, `rgba(255,190,95,${a})`); g.addColorStop(1, 'rgba(255,160,60,0)');
+    ctx.fillStyle = g; ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ---- Screen overlays: lion danger, boost glow, lightning flash ---- */
+function drawOverlays() {
+  if ((mode === 'play' || mode === 'dying') && Lion.active) {
+    const gap = P.x - Lion.x, danger = clamp(1 - (gap - 120) / 900, 0, 1);
+    if (danger > 0) {
+      const g = ctx.createLinearGradient(0, 0, VW * 0.35, 0);
+      g.addColorStop(0, `rgba(150,20,10,${0.45 * danger * (0.8 + 0.2 * Math.sin(Env.time * 6))})`); g.addColorStop(1, 'rgba(150,20,10,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, VW * 0.35, VH);
+    }
+    const lsx = (Lion.x - cam.x) * cam.z;
+    if (lsx < 10) {
+      const ly = clamp((lionY(Lion.x) - 45 - cam.y) * cam.z, 40, VH - 40);
+      const pulse = 0.6 + 0.4 * Math.sin(Env.time * 5);
+      const g = ctx.createRadialGradient(18, ly, 0, 18, ly, 26);
+      g.addColorStop(0, `rgba(255,110,40,${0.7 * pulse})`); g.addColorStop(1, 'rgba(255,60,20,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, ly - 26, 50, 52);
+      ctx.fillStyle = `rgba(255,215,130,${pulse})`;
+      ctx.beginPath(); ctx.ellipse(14, ly, 3.2, 1.8, -0.2, 0, TAU); ctx.ellipse(24, ly - 1, 3.2, 1.8, -0.2, 0, TAU); ctx.fill();
+    }
+  }
+  if (P.boostT > 0 && mode === 'play') {
+    const a = Math.min(1, P.boostT) * 0.35;
+    const g = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.3, VW / 2, VH / 2, Math.max(VW, VH) * 0.75);
+    g.addColorStop(0, 'rgba(255,240,190,0)'); g.addColorStop(1, `rgba(255,225,150,${a})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+  }
+  // Soft vignette
+  const v = ctx.createRadialGradient(VW / 2, VH * 0.45, Math.min(VW, VH) * 0.4, VW / 2, VH * 0.5, Math.max(VW, VH) * 0.8);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,10,0.28)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, VW, VH);
+  if (Env.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Env.flash * 0.25})`; ctx.fillRect(0, 0, VW, VH); }
+}
+
+function render(dt) {
+  const pal = getPal(Env.day);
+  lights = [];
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  drawSky(pal);
+  drawLayers(pal);
+  const z = cam.z * DPR;
+  const shx = shake > 0 ? (Math.random() - 0.5) * shake : 0, shy = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+  ctx.setTransform(z, 0, 0, z, (-cam.x * cam.z + shx) * DPR, (-cam.y * cam.z + shy) * DPR);
+  drawWorld(pal);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawWeather(dt, pal);
+  drawLighting(pal);
+  drawOverlays();
+}
+
+/* =====================================================================
+   9. UI SCREENS
+   ===================================================================== */
+let mode = 'title';          // title | play | paused | dying | over | menu
+let menuFrom = 'title';      // where "Back" returns to from a menu
+const $ = id => document.getElementById(id);
+const SCREENS = ['title', 'pause', 'gameover', 'workshop', 'riders', 'goalsScreen'];
+
+const ICONS = {
+  soundOn: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff6e6"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#fff6e6" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
+  soundOff: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff6e6"/><path d="M16 9l5 6M21 9l-5 6" stroke="#fff6e6" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  staff: '<svg viewBox="0 0 24 24"><path d="M9 22 V8 a4 4 0 0 1 8 0 v1.5" stroke="#d9b36b" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="17" cy="11" r="1.4" fill="#fff1a8"/></svg>',
+  armour: '<svg viewBox="0 0 24 24"><path d="M12 2 L20 5 V11 C20 16.5 16.5 20.5 12 22 C7.5 20.5 4 16.5 4 11 V5 Z" fill="#d8c07a" stroke="#fff2c2" stroke-width="1.2"/><path d="M12 6 V18 M8 10 H16" stroke="#6b4d1f" stroke-width="2"/></svg>',
+  flask: '<svg viewBox="0 0 24 24"><circle cx="12" cy="15" r="8" fill="#ffcf6b" opacity=".25"/><path d="M10 3h4v5l4 6a4.5 4.5 0 0 1-4 7h-4a4.5 4.5 0 0 1-4-7l4-6z" fill="#8a6a3e"/><path d="M8.5 14h7l1 2a3 3 0 0 1-3 3.5h-3A3 3 0 0 1 7.5 16z" fill="#ffc766"/></svg>',
+  map: '<svg viewBox="0 0 24 24"><path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z" fill="#e8d4a3"/><path d="M9 3v16M15 5v16" stroke="#a88a55" stroke-width="1.2"/><path d="M5 13c3-3 6 2 9-2s4 0 5-1" stroke="#b5452f" stroke-width="1.4" fill="none" stroke-dasharray="2 2"/></svg>',
+  cloak: '<svg viewBox="0 0 24 24"><path d="M12 5 C8 8 3 9 1 13 L8 12 L12 20 L16 12 L23 13 C21 9 16 8 12 5z" fill="#7a5230"/><circle cx="12" cy="5" r="3" fill="#7a5230"/></svg>',
+};
+
+function toast(text, sub, cls) {
+  const box = $('toasts');
+  while (box.children.length >= 3) box.removeChild(box.firstChild);
+  const d = document.createElement('div');
+  d.className = 'toast' + (cls ? ' ' + cls : '');
+  d.textContent = text;
+  if (sub) { const s = document.createElement('small'); s.textContent = sub; d.appendChild(s); }
+  box.appendChild(d);
+  setTimeout(() => { d.style.transition = 'opacity .5s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 500); }, sub ? 3400 : 2200);
+}
+
+function showScreen(id) {
+  for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id);
+  $('hud').classList.toggle('hidden', !(mode === 'play' || mode === 'paused' || mode === 'dying'));
+}
+
+function updateMuteUI() {
+  $('muteBtn').innerHTML = save.muted ? ICONS.soundOff : ICONS.soundOn;
+  $('titleMute').textContent = save.muted ? 'Sound: off' : 'Sound: on';
+  $('pauseMute').textContent = save.muted ? 'Sound: off' : 'Sound: on';
+}
+function toggleMute() { Sound.init(); Sound.setMuted(!save.muted); updateMuteUI(); }
+
+function updateTitleMeta() {
+  $('titleMeta').textContent = `Level ${save.level}  ·  Best ${fmt(save.best)}  ·  ${fmt(save.oil)} lamp oil`;
+}
+
+function updateItemButtons() {
+  const inRun = mode === 'play' || mode === 'paused';
+  $('staffBtn').innerHTML = ICONS.staff; $('flaskBtn').innerHTML = ICONS.flask;
+  $('staffBtn').classList.toggle('hidden', !(inRun && !run.usedStaff && save.items.staff > 0));
+  $('flaskBtn').classList.toggle('hidden', !(inRun && !run.usedFlask && save.items.flask > 0));
+  $('armourIcon').classList.toggle('hidden', !(inRun && run.armour > 0));
+}
+
+/* ---- HUD (text updated ~10x per second, bars every frame) ---- */
+const hudCache = {};
+function setText(id, t) { if (hudCache[id] !== t) { hudCache[id] = t; $(id).textContent = t; } }
+let hudT = 0;
+function updateHUD(dt) {
+  if (!(mode === 'play' || mode === 'dying')) return;
+  hudT -= dt;
+  if (hudT <= 0) {
+    hudT = 0.1;
+    setText('hudDist', fmt(run.dist) + ' m');
+    setText('hudScore', fmt(run.score));
+    setText('hudOil', String(run.oil));
+    setText('hudSheep', String(run.sheep));
+  }
+  const w = (P.boostT > 0 ? P.boostT / 2.6 : run.boost) * 100;
+  const ws = w.toFixed(1) + '%';
+  if (hudCache.boost !== ws) { hudCache.boost = ws; $('boostFill').style.width = ws; }
+  const ba = P.boostT > 0;
+  if (hudCache.boostA !== ba) { hudCache.boostA = ba; $('boostWrap').classList.toggle('active', ba); }
+  combo.flashT = Math.max(0, combo.flashT - dt);
+  let names = '', pts = '', op = 0;
+  if (combo.mult > 0) { names = combo.names.join(' + '); pts = `${fmt(combo.pts)} x${combo.mult}`; op = 1; }
+  else if (combo.flashT > 0) { pts = combo.flashText; op = clamp(combo.flashT, 0, 1); }
+  setText('comboNames', names); setText('comboPts', pts);
+  const ops = op.toFixed(2);
+  if (hudCache.op !== ops) { hudCache.op = ops; $('combo').style.opacity = ops; }
+}
+
+/* ---- Goals list (shared by pause, game over and goals screens) ---- */
+function renderGoals(el, opts) {
+  el.innerHTML = '';
+  (opts.goals || save.goals).forEach((g, i) => {
+    const row = document.createElement('div');
+    row.className = 'goal' + (g.done ? ' done' : '');
+    const tick = document.createElement('div'); tick.className = 'tick'; tick.textContent = g.done ? '✓' : '';
+    const tx = document.createElement('div'); tx.className = 'gtext'; tx.textContent = goalText(g) + (g.skipped ? ' (skipped)' : '');
+    row.appendChild(tick); row.appendChild(tx);
+    if (!g.done && opts.stats) {
+      const v = opts.stats[goalStat(g)] || 0;
+      const p = document.createElement('div'); p.className = 'prog';
+      p.textContent = g.id === 'air' ? `${v.toFixed(1)} / ${g.target}` : `${fmt(Math.min(v, g.target))} / ${fmt(g.target)}`;
+      row.appendChild(p);
+    }
+    if (!g.done && opts.skip && save.items.map > 0) {
+      const b = document.createElement('button'); b.className = 'btn small ghost'; b.textContent = 'Use map';
+      b.dataset.act = 'skip:' + i; row.appendChild(b);
+    }
+    el.appendChild(row);
+  });
+}
+
+/* ---- Workshop ---- */
+function renderWorkshop() {
+  $('wsOil').textContent = fmt(save.oil);
+  const box = $('wsCards'); box.innerHTML = '';
+  for (const it of ITEMS) {
+    const owned = it.perm ? (save.cloak ? 'Unlocked' : 'Not owned') : `Owned: ${save.items[it.id]}`;
+    const done = it.perm && save.cloak;
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = `<div class="ico">${ICONS[it.id]}</div><h3></h3><p></p><div class="own"></div>`;
+    card.querySelector('h3').textContent = it.name;
+    card.querySelector('p').textContent = it.desc;
+    card.querySelector('.own').textContent = owned;
+    const b = document.createElement('button'); b.className = 'btn small';
+    b.textContent = done ? 'Unlocked' : `Buy · ${it.cost} oil`;
+    b.disabled = done || save.oil < it.cost;
+    b.dataset.act = 'buy:' + it.id;
+    card.appendChild(b); box.appendChild(card);
+  }
+}
+function buyItem(id) {
+  const it = ITEMS.find(i => i.id === id);
+  if (!it || save.oil < it.cost) return;
+  if (it.perm) { if (save.cloak) return; save.cloak = true; }
+  else save.items[id] = (save.items[id] || 0) + 1;
+  save.oil -= it.cost; writeSave(); Sound.goal();
+  renderWorkshop();
+}
+
+/* ---- Riders ---- */
+function renderRiders() {
+  $('rdOil').textContent = fmt(save.oil);
+  const box = $('rdCards'); box.innerHTML = '';
+  for (const rd of RIDERS) {
+    const unlocked = save.riders.includes(rd.id), sel = save.rider === rd.id;
+    const card = document.createElement('div'); card.className = 'card' + (sel ? ' sel' : '');
+    const c = document.createElement('canvas'); c.width = 192; c.height = 160;
+    const g = c.getContext('2d');
+    g.setTransform(2.6, 0, 0, 2.6, 96, 128);
+    g.fillStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.ellipse(0, 0, 26, 4, 0, 0, TAU); g.fill();
+    const lamp = drawRider(g, rd, { crouch: 0.3, t: 0.4, spd: 0.4 });
+    const lg = g.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, 14);
+    lg.addColorStop(0, 'rgba(255,200,100,0.6)'); lg.addColorStop(1, 'rgba(255,200,100,0)');
+    g.globalCompositeOperation = 'lighter'; g.fillStyle = lg; g.fillRect(lamp.x - 14, lamp.y - 14, 28, 28);
+    if (!unlocked) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(10,12,30,0.55)'; g.fillRect(-40, -60, 80, 70); }
+    card.appendChild(c);
+    const h = document.createElement('h3'); h.textContent = rd.name; card.appendChild(h);
+    const p = document.createElement('p'); p.textContent = rd.desc; card.appendChild(p);
+    const b = document.createElement('button'); b.className = 'btn small' + (unlocked && !sel ? ' ghost' : '');
+    if (sel) { b.textContent = 'Riding'; b.disabled = true; }
+    else if (unlocked) { b.textContent = 'Choose'; b.dataset.act = 'rider:' + rd.id; }
+    else { b.textContent = `Unlock · ${rd.cost} oil`; b.disabled = save.oil < rd.cost; b.dataset.act = 'unlock:' + rd.id; }
+    card.appendChild(b); box.appendChild(card);
+  }
+}
+
+/* ---- Goals screen ---- */
+function renderGoalsScreen() {
+  $('glTitle').textContent = `Goals · Level ${save.level}`;
+  renderGoals($('glList'), { skip: true });
+  $('glMaps').textContent = save.items.map > 0 ? `You have ${save.items.map} Pilgrim's Map${save.items.map > 1 ? 's' : ''}. Use one to skip a goal.` : "Buy a Pilgrim's Map in the Workshop to skip a goal you are stuck on.";
+}
+function skipGoal(i) {
+  const g = save.goals[i];
+  if (!g || g.done || save.items.map <= 0) return;
+  save.items.map--; g.done = true; g.skipped = true; writeSave(); Sound.click();
+  if (save.goals.every(x => x.done)) { const lu = doLevelUp(); writeSave(); showLevelUp(lu); }
+  renderGoalsScreen();
+}
+
+/* ---- Level up ---- */
+function doLevelUp() {
+  save.level++;
+  const reward = 30 + save.level * 15;
+  save.oil += reward;
+  const verse = VERSES[save.verseIdx % VERSES.length];
+  save.verseIdx++;
+  save.goals = null; ensureGoals();
+  return { level: save.level, verse, reward };
+}
+function showLevelUp(lu) {
+  $('luLevel').textContent = 'Level ' + lu.level;
+  $('luText').textContent = '"' + lu.verse[0] + '"';
+  $('luRef').textContent = lu.verse[1];
+  $('luReward').textContent = `A gift for the road: +${lu.reward} lamp oil. Three new goals await.`;
+  $('levelup').classList.remove('hidden');
+  Sound.goal();
+}
+
+function openMenu(which) {
+  menuFrom = mode === 'over' ? 'over' : (mode === 'menu' ? menuFrom : 'title');
+  mode = 'menu';
+  if (which === 'workshop') renderWorkshop();
+  if (which === 'riders') renderRiders();
+  if (which === 'goals') renderGoalsScreen();
+  showScreen(which === 'goals' ? 'goalsScreen' : which);
+}
+function backFromMenu() {
+  if (menuFrom === 'over') { mode = 'over'; showScreen('gameover'); refreshGameOverGoals(); }
+  else goTitle();
+}
+function goTitle() {
+  mode = 'title'; cam.demoX = Math.max(cam.demoX, P.x || 0);
+  updateTitleMeta(); showScreen('title'); updateItemButtons();
+}
+
+/* ---- Run lifecycle ---- */
+function startRun() {
+  Sound.init();
+  S = Object.assign({}, BASE_STATS, (RIDERS.find(r => r.id === save.rider) || RIDERS[0]).stats);
+  resetWorld((Math.random() * 1e9) | 0);
+  ensureGenerated(5000);
+  resetRun();
+  resetPlayer();
+  Input.down = false; Input.jumpBuffer = 0; Input.freshPress = false; Input.pointers.clear();
+  cam.x = P.x - (VW / cam.z) * 0.3; cam.y = P.y - (VH / cam.z) * 0.5; cam.yAvg = cam.y; cam.px = cam.x; cam.py = cam.y;
+  mode = 'play'; acc = 0;
+  showScreen(null);
+  $('levelup').classList.add('hidden');
+  updateItemButtons();
+  for (const k in hudCache) delete hudCache[k];
+  if (save.runs === 0) toast('Tap to jump. Hold in the air to backflip.', 'Let go to stop spinning, and land flat on the snow.');
+  else if (run.armour) toast('Armour of God is on', 'It will save you from one crash or fall', 'gold');
+}
+
+let lastRunGoals = null, lastRunStats = null;
+function finishRun() {
+  if (mode === 'over') return;
+  mode = 'over';
+  bankCombo();
+  run.stats.dist = Math.floor(run.dist); run.stats.score = Math.floor(run.score);
+  checkGoals();
+  const score = Math.floor(run.score), dist = Math.floor(run.dist);
+  const newBest = score > save.best;
+  if (newBest) save.best = score;
+  save.bestDist = Math.max(save.bestDist, dist);
+  save.oil += run.oil; save.runs++; save.totalSheep += run.sheep;
+  lastRunGoals = save.goals.map(g => Object.assign({}, g));
+  lastRunStats = run.stats;
+  const lu = save.goals.every(g => g.done) ? doLevelUp() : null;
+  writeSave();
+
+  $('goTitle').textContent = run.cause === 'lion' ? 'Caught by the Lion' : 'Lost in the Chasm';
+  $('goCause').textContent = run.cause === 'lion' ? 'The roaring lion caught you. Rise and ride again.' : 'You fell into the chasm. Take heart and ride again.';
+  const tiles = [
+    [fmt(dist) + ' m', 'Distance'],
+    [fmt(score) + (newBest ? ' <span class="newbest">NEW BEST</span>' : ''), 'Score'],
+    [fmt(save.best), 'Best score'],
+    ['+' + run.oil, 'Oil earned'],
+    [String(run.sheep), 'Sheep brought home'],
+    ['x' + run.stats.maxMult, 'Top combo'],
+  ];
+  $('goStats').innerHTML = tiles.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  refreshGameOverGoals();
+  const short = VERSES.filter(v => v[0].length < 120);
+  const v = short[Math.floor(Math.random() * short.length)];
+  $('goVerse').innerHTML = '';
+  $('goVerse').append('"' + v[0] + '"');
+  const sm = document.createElement('small'); sm.textContent = v[1]; $('goVerse').appendChild(sm);
+  showScreen('gameover');
+  updateItemButtons();
+  if (lu) showLevelUp(lu);
+}
+function refreshGameOverGoals() {
+  renderGoals($('goGoals'), { goals: lastRunGoals || save.goals, stats: lastRunStats });
+}
+
+function pauseGame() {
+  if (mode !== 'play') return;
+  mode = 'paused'; Input.down = false;
+  renderGoals($('pauseGoals'), { stats: run.stats });
+  showScreen('pause');
+}
+function resumeGame() {
+  if (mode !== 'paused') return;
+  exitPhoto();
+  mode = 'play'; acc = 0; showScreen(null);
+}
+function enterPhoto() {
+  document.body.classList.add('photo');
+  const h = $('photoHint'); h.classList.remove('hidden'); h.style.opacity = '0.8';
+  setTimeout(() => { h.style.opacity = '0'; }, 2200);
+}
+function exitPhoto() {
+  document.body.classList.remove('photo');
+  $('photoHint').classList.add('hidden');
+}
+
+/* Button actions (event delegation). */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  b.blur();
+  Sound.init(); Sound.click();
+  const [act, arg] = b.dataset.act.split(':');
+  switch (act) {
+    case 'riders': case 'workshop': case 'goals': openMenu(act); break;
+    case 'mute': toggleMute(); break;
+    case 'resume': resumeGame(); break;
+    case 'photo': enterPhoto(); break;
+    case 'restart': startRun(); break;
+    case 'quit': goTitle(); break;
+    case 'again': startRun(); break;
+    case 'back': backFromMenu(); break;
+    case 'luClose': $('levelup').classList.add('hidden'); if (mode === 'over') refreshGameOverGoals(); if (mode === 'menu') renderGoalsScreen(); updateTitleMeta(); break;
+    case 'buy': buyItem(arg); break;
+    case 'rider': save.rider = arg; writeSave(); renderRiders(); break;
+    case 'unlock': {
+      const rd = RIDERS.find(r => r.id === arg);
+      if (rd && save.oil >= rd.cost && !save.riders.includes(rd.id)) { save.oil -= rd.cost; save.riders.push(rd.id); save.rider = rd.id; writeSave(); Sound.goal(); }
+      renderRiders(); break;
+    }
+    case 'skip': skipGoal(+arg); break;
+  }
+});
+$('pauseBtn').addEventListener('click', () => { pauseGame(); });
+$('muteBtn').addEventListener('click', () => { toggleMute(); });
+$('staffBtn').addEventListener('click', () => { useStaff(); });
+$('flaskBtn').addEventListener('click', () => { useFlask(); });
+
+/* =====================================================================
+   10. INPUT
+   One button: tap/Space jumps; hold in the air spins backwards.
+   ===================================================================== */
+function press() {
+  if (Input.down) return;
+  Input.down = true; Input.freshPress = true; Input.jumpBuffer = 0.12;
+  Input.holdT = P.state === 'air' ? 1 : 0;   // presses in the air spin at once
+}
+function release() { Input.down = false; }
+function isUI(e) { return !!(e.target && e.target.closest && e.target.closest('button, .panel, .parchment')); }
+
+window.addEventListener('pointerdown', e => {
+  if (document.body.classList.contains('photo')) { exitPhoto(); return; }
+  if (isUI(e)) return;
+  Sound.init();
+  if (mode === 'title') { startRun(); return; }
+  if (mode === 'play') { Input.pointers.add(e.pointerId); press(); if (e.cancelable) e.preventDefault(); }
+}, { passive: false });
+const endPointer = e => { Input.pointers.delete(e.pointerId); if (Input.pointers.size === 0) release(); };
+window.addEventListener('pointerup', endPointer);
+window.addEventListener('pointercancel', endPointer);
+window.addEventListener('contextmenu', e => e.preventDefault());
+
+const JUMP_KEYS = ['Space', 'ArrowUp', 'KeyW', 'KeyZ', 'KeyX'];
+window.addEventListener('keydown', e => {
+  const k = e.code;
+  if (document.body.classList.contains('photo')) { exitPhoto(); e.preventDefault(); return; }
+  if (JUMP_KEYS.includes(k)) {
+    e.preventDefault();
+    if (e.repeat) return;
+    Sound.init();
+    if (mode === 'title') startRun(); else if (mode === 'play') press();
+    return;
+  }
+  if (k === 'Enter') {
+    if (mode === 'title') startRun();
+    else if (mode === 'over' && $('levelup').classList.contains('hidden')) startRun();
+  } else if (k === 'KeyP' || k === 'Escape') {
+    if (mode === 'play') pauseGame(); else if (mode === 'paused') resumeGame();
+  } else if (k === 'KeyM') toggleMute();
+  else if (k === 'KeyS') useStaff();
+  else if (k === 'KeyF') useFlask();
+  else if (k === 'KeyH' && mode === 'paused') enterPhoto();
+});
+window.addEventListener('keyup', e => { if (JUMP_KEYS.includes(e.code)) { e.preventDefault(); release(); } });
+window.addEventListener('blur', () => { release(); Input.pointers.clear(); pauseGame(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { pauseGame(); if (Sound.ready) Sound.ctx.suspend(); }
+  else if (Sound.ready) Sound.ctx.resume();
+});
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+
+/* =====================================================================
+   11. MAIN LOOP (fixed 120 Hz physics, render every animation frame)
+   ===================================================================== */
+let last = performance.now(), acc = 0;
+function updateAudio() {
+  if (!Sound.ready) return;
+  Sound.updateMusic();
+  const playing = mode === 'play';
+  const wind = (playing ? 0.04 + clamp(P.speed / 900, 0, 1) * 0.14 : 0.05) + Env.snow * 0.03 + Env.storm * 0.08 + Env.rain * 0.03;
+  let carve = 0, freq = 800;
+  if (playing && P.state === 'ground') { carve = clamp(P.speed / 800, 0, 1) * 0.2; freq = 600 + P.speed * 0.7; }
+  if (playing && P.state === 'rail') { carve = 0.14; freq = P.rail && P.rail.kind === 'wall' ? 2600 : 1600; }
+  Sound.updateBeds(mode === 'paused' ? 0.02 : wind, carve, freq);
+}
+/* Adaptive quality: if play runs slower than ~50 fps, render at a lower pixel density. */
+const perfMon = { t: 0, n: 0 };
+function watchPerformance(dt) {
+  if (mode !== 'play' || dt <= 0 || dt >= 0.1) { perfMon.t = 0; perfMon.n = 0; return; }
+  perfMon.t += dt; perfMon.n++;
+  if (perfMon.t > 2.5) {
+    if (perfMon.t / perfMon.n > 0.02 && dprCap > 1 && (window.devicePixelRatio || 1) > 1) { dprCap = Math.max(1, dprCap - 0.5); resize(); }
+    perfMon.t = 0; perfMon.n = 0;
+  }
+}
+function frame(now) {
+  let dt = (now - last) / 1000; last = now;
+  if (!(dt > 0)) dt = 0; if (dt > 0.1) dt = 0.1;
+  watchPerformance(dt);
+  if (mode === 'play' || mode === 'dying') {
+    acc += Math.min(dt, 0.05);
+    let n = 0;
+    while (acc >= CFG.STEP && n < 8 && (mode === 'play' || mode === 'dying')) { update(CFG.STEP); acc -= CFG.STEP; n++; }
+  }
+  if (mode !== 'paused') { updateEnv(dt); updateParticles(dt); shake = Math.max(0, shake - 30 * dt); }
+  updateCamera(dt);
+  render(dt);
+  updateHUD(dt);
+  updateAudio();
+  requestAnimationFrame(frame);
+}
+
+/* ---- Boot ---- */
+resize();
+resetWorld(12345); ensureGenerated(6000);
+resetRun(); resetPlayer();
+cam.z = baseZoom(); cam.demoX = 300;
+updateMuteUI(); updateTitleMeta(); updateItemButtons();
+showScreen('title');
+requestAnimationFrame(frame);
+
+/* Small hook for automated tests and curious pilgrims. */
+window.LampRoad = { W, P, S: () => S, run, combo, Lion, Input, save: () => save, CFG, groundAt, groundSlope, railY,
+  startRun, update, crash, landOn, gatherSheep, checkGoals, finishRun, press, release, spawnLion, fireBoost,
+  Env, cam, lightning, render, setMode: m => { mode = m; }, getMode: () => mode, useStaff, useFlask, doLevelUp, skipGoal, ensureGenerated };
+</script>
+</body>
+</html>
