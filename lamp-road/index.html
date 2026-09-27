@@ -1589,17 +1589,23 @@ function mkRegion(o, extra) {
 }
 const REGIONS = [
   Object.assign(mkRegion({ top: '#a49eb4', mid: '#f6aa2e', bot: '#f28a2a', layers: ['#86727e', '#586f7e', '#2d888c', '#216c72', '#184e52'], snow: '#e2b24c', shade: '#8a6d2e', deep: '#4a4024', stone: '#57524e', tree: '#22423a', sun: '#fff2b0', cloudHi: '#ffe27e', cloudLo: '#c98e84' },
-    { bank: 40, poster: 0, flowers: 1, smoke: 0, snowfall: 0, moteAmt: 1, mote: '#ffd782', jewels: ['#d8352a', '#3cc6c8', '#6e7fe6', '#e8742a', '#2fb3b8', '#c42f3a'] }),
+    { bank: 40, poster: 0, flowers: 1, smoke: 0, snowfall: 0, moteAmt: 1, cloudAmt: 1, frame: 0, mote: '#ffd782', jewels: ['#d8352a', '#3cc6c8', '#6e7fe6', '#e8742a', '#2fb3b8', '#c42f3a'] }),
     { name: 'The Golden Fields', verse: 'Lift up your eyes, and look on the fields. John 4:35' }),
   Object.assign(mkRegion({ top: '#a3b893', mid: '#c6d1aa', bot: '#e3e0c2', layers: ['#a7bb92', '#89a574', '#6a8e58', '#4b7342', '#2f5530'], snow: '#8cb060', shade: '#1d2b16', deep: '#0e160b', stone: '#2c3524', tree: '#1f3a22', sun: '#f3a93a', cloudHi: '#f6f3e8', cloudLo: '#c8ccb6' },
-    { bank: 8, poster: 1, flowers: 0.6, smoke: 0, snowfall: 0, moteAmt: 0.6, mote: '#f4f6e0', jewels: ['#4f7f3a', '#6f9a45', '#3a6a44', '#86a84f', '#5a8a4a', '#2f5f3a'] }),
+    { bank: 8, poster: 1, flowers: 0.6, smoke: 0, snowfall: 0, moteAmt: 0.6, cloudAmt: 1, frame: 0, mote: '#f4f6e0', jewels: ['#4f7f3a', '#6f9a45', '#3a6a44', '#86a84f', '#5a8a4a', '#2f5f3a'] }),
     { name: 'The Green Hills', verse: 'He maketh me to lie down in green pastures. Psalm 23:2' }),
   Object.assign(mkRegion({ top: '#4a8aa0', mid: '#6aa0b2', bot: '#b4d2da', layers: ['#f5f8fa', '#e2ecf0', '#c9dce4', '#a3c0cd', '#6d90a2'], snow: '#eef5f8', shade: '#101820', deep: '#070b10', stone: '#1c252e', tree: '#1c3440', sun: '#e4f0f4', cloudHi: '#ffffff', cloudLo: '#c3d8e0' },
-    { bank: 7, poster: 1, flowers: 0, smoke: 0, snowfall: 0.35, moteAmt: 0, mote: '#ffffff', jewels: ['#1f3a46', '#2a4a56', '#183440', '#2f5260', '#1f3a46', '#23404c'] }),
+    { bank: 7, poster: 1, flowers: 0, smoke: 0, snowfall: 0.35, moteAmt: 0, cloudAmt: 1, frame: 0, mote: '#ffffff', jewels: ['#1f3a46', '#2a4a56', '#183440', '#2f5260', '#1f3a46', '#23404c'] }),
     { name: 'The High Pass', verse: 'I will lift up mine eyes unto the hills. Psalm 121:1' }),
-  Object.assign(mkRegion({ top: '#b36a48', mid: '#dc9a62', bot: '#f2c890', layers: ['#dfae88', '#c98c68', '#b06e52', '#8a4c3a', '#5a2c24'], snow: '#d0683c', shade: '#1a0e0a', deep: '#0a0504', stone: '#2a1a14', tree: '#3a1a14', sun: '#fff2d6', cloudHi: '#fbe6c6', cloudLo: '#d8a47c' },
-    { bank: 6, poster: 1, flowers: 0, smoke: 1, snowfall: 0, moteAmt: 1, mote: '#ff8c3c', jewels: ['#6a2a20', '#8a3a24', '#5a2018', '#a04a2a', '#6a2a20', '#7a3222'] }),
+  Object.assign(mkRegion({ top: '#f2b862', mid: '#f2b862', bot: '#f0a654', layers: ['#eb9a4c', '#e3843c', '#d66c30', '#c25426', '#a23c1c'], snow: '#3a2620', shade: '#2a1d1a', deep: '#241815', stone: '#2a1d1a', tree: '#6a2a18', sun: '#fbe0a0', cloudHi: '#f8c47a', cloudLo: '#eaa45a' },
+    { bank: 4, poster: 1, flowers: 0, smoke: 0, snowfall: 0, moteAmt: 0.3, cloudAmt: 0, frame: 1, mote: '#ffd08a', jewels: ['#b8481f', '#c85a26', '#a23c1c', '#d66c30', '#b8481f', '#9a3418'] }),
+    { name: 'The Sunset Hills', verse: "From the rising of the sun unto the going down of the same the LORD's name is to be praised. Psalm 113:3" }),
+  Object.assign(mkRegion({ top: '#d9772e', mid: '#d9772e', bot: '#dd8235', layers: ['#e0924a', '#d57c3a', '#c8652e', '#b04f26', '#8e3a1c'], snow: '#6a2c14', shade: '#120a06', deep: '#0b0604', stone: '#1e120c', tree: '#4a1e10', sun: '#f6c27a', cloudHi: '#c9652b', cloudLo: '#bf5a26' },
+    { bank: 4, poster: 1, flowers: 0, smoke: 1, snowfall: 0, moteAmt: 1, cloudAmt: 0.15, frame: 0, mote: '#ff8c3c', jewels: ['#6a2a14', '#7a3218', '#5a2010', '#8a3a1c', '#6a2a14', '#7a3218'] }),
     { name: 'The Valley of Embers', verse: 'Though I walk through the valley of the shadow of death, I will fear no evil. Psalm 23:4' }),
+  Object.assign(mkRegion({ top: '#cfc592', mid: '#cfc592', bot: '#d3c996', layers: ['#ccc28e', '#c9bf8a', '#c5bb85', '#c0b67f', '#b8ad76'], snow: '#2e2a10', shade: '#211d08', deep: '#1c1906', stone: '#2a2612', tree: '#8f8454', sun: '#e6dfb4', cloudHi: '#dcd4a4', cloudLo: '#d2c998' },
+    { bank: 3, poster: 1, flowers: 0, smoke: 0, snowfall: 0, moteAmt: 0, cloudAmt: 0.12, frame: 0, mote: '#ffffff', jewels: ['#9a8e5a', '#a4986a', '#948858', '#a09460', '#9a8e5a', '#948858'] }),
+    { name: 'The Quiet Plain', verse: 'Be still, and know that I am God. Psalm 46:10' }),
 ];
 /** Blend two palettes field by field (colours, colour lists, numbers). */
 function mixPal(A, B, t) {
@@ -1806,7 +1812,10 @@ function drawClouds(pal, H, bandTop) {
   const U = 1000 / H, f = 0.015, u0 = cam.x * cam.z * f * U + Env.time * 1.5;
   const sp = 380, k0 = Math.floor(u0 / sp) - 2, k1 = Math.floor((u0 + VW * U) / sp) + 2;
   const lo = pal.cloudLo, hi = pal.cloudHi, midc = mixc(lo, hi, 0.5);
+  const camt = pal.cloudAmt === undefined ? 1 : pal.cloudAmt;
+  ctx.globalAlpha = camt;
   for (let k = k0; k <= k1; k++) {
+    if (camt < 0.02) break;
     if (hash(k, 301) < 0.25) continue;
     const cx = (k * sp + hash(k, 302) * sp * 0.5 - u0) / U;
     const base = bandTop + H * (0.5 + hash(k, 303) * 0.1);
@@ -1828,6 +1837,7 @@ function drawClouds(pal, H, bandTop) {
     pass(hi, -0.22, -0.32, 0.66, 1);
     pass(mixc(hi, [255, 250, 220], 0.35), -0.3, -0.45, 0.32, 0.9);
   }
+  ctx.globalAlpha = 1;
   if ((pal.smoke || 0) > 0.03) {
     // Tall smoke plumes rising from distant fires.
     const ps = 900, p0 = Math.floor(u0 / ps) - 1, p1 = Math.floor((u0 + VW * U) / ps) + 1;
@@ -1835,9 +1845,9 @@ function drawClouds(pal, H, bandTop) {
       if (hash(k, 401) < 0.35) continue;
       const bx = (k * ps + hash(k, 402) * ps * 0.6 - u0) / U, by = bandTop + H * 0.64;
       const puffs = [];
-      for (let i = 0; i < 16; i++) {
-        const t = i / 15, drift = Math.sin(t * 2.5 + Env.time * 0.2 + k) * H * 0.04 + t * H * 0.12;
-        puffs.push([bx + drift, by - t * H * 0.6, H * (0.025 + t * 0.05)]);
+      for (let i = 0; i < 20; i++) {
+        const t = i / 19, drift = Math.sin(t * 2.5 + Env.time * 0.2 + k) * H * 0.03 + t * t * H * 0.2;
+        puffs.push([bx + drift + (hash(i, k + 403) - 0.5) * t * H * 0.12, by - t * H * 0.62, H * (0.025 + t * t * 0.11)]);
       }
       ctx.globalAlpha = pal.smoke;
       for (const [col, dx, dy, sc] of [[lo, 0, 0, 1], [hi, -0.25, -0.2, 0.7]]) {
@@ -1901,7 +1911,8 @@ function drawLayers(pal) {
     ctx.lineTo(VW + 8, VH); ctx.closePath();
     if (L.snowcap) {
       const g = ctx.createLinearGradient(0, minY, 0, baseY);
-      g.addColorStop(0, css(mixc(col, pal.sun, 0.35))); g.addColorStop(0.45, css(col)); g.addColorStop(1, css(mixc(col, pal.bot, 0.25)));
+      const fl = 1 - (pal.poster || 0) * 0.85;
+      g.addColorStop(0, css(mixc(col, pal.sun, 0.35 * fl))); g.addColorStop(0.45, css(col)); g.addColorStop(1, css(mixc(col, pal.bot, 0.25 * fl)));
       ctx.fillStyle = g;
     } else ctx.fillStyle = css(col);
     ctx.fill();
@@ -1945,7 +1956,7 @@ function drawLayers(pal) {
     // Mist between layers
     if (i === 1 || i === 3) {
       const my = baseY - H * 0.02, g = ctx.createLinearGradient(0, my - H * 0.12, 0, my + H * 0.1);
-      const a = 0.35 + Env.fog * 0.35;
+      const a = (0.35 + Env.fog * 0.35) * (1 - 0.75 * (pal.poster || 0));
       g.addColorStop(0, css(pal.bot, 0)); g.addColorStop(0.6, css(pal.bot, a)); g.addColorStop(1, css(pal.bot, 0));
       ctx.fillStyle = g; ctx.fillRect(0, my - H * 0.12, VW, H * 0.22);
     }
@@ -2134,16 +2145,16 @@ function drawObstacle(o, pal) {
   ctx.save();
   if (o.hitT > 0 && o.hit) { ctx.globalAlpha = 0.5 + 0.5 * Math.sin(o.hitT * 30); }
   if (o.type === 'rock') {
-    ctx.fillStyle = css(mixc([108, 104, 116], pal.deep, 0.35));
+    ctx.fillStyle = silColor(mixc([108, 104, 116], pal.deep, 0.35));
     ctx.beginPath(); ctx.moveTo(x - w / 2, gy + 6); ctx.lineTo(x - w / 2 + 3, gy - h * 0.6); ctx.lineTo(x - w * 0.12, gy - h); ctx.lineTo(x + w * 0.25, gy - h * 0.88); ctx.lineTo(x + w / 2, gy - h * 0.3); ctx.lineTo(x + w / 2, gy + 6); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = css(mixc([150, 146, 158], pal.deep, 0.3));
+    ctx.fillStyle = silColor(mixc([150, 146, 158], pal.deep, 0.3));
     ctx.beginPath(); ctx.moveTo(x - w * 0.12, gy - h); ctx.lineTo(x + w * 0.25, gy - h * 0.88); ctx.lineTo(x + w * 0.05, gy - h * 0.2); ctx.closePath(); ctx.fill();
     ctx.fillStyle = css(pal.snow);
     ctx.beginPath(); ctx.moveTo(x - w * 0.32, gy - h * 0.8); ctx.lineTo(x - w * 0.12, gy - h - 2); ctx.lineTo(x + w * 0.25, gy - h * 0.9 - 2); ctx.lineTo(x + w * 0.1, gy - h * 0.75); ctx.closePath(); ctx.fill();
   } else if (o.type === 'fire') {
-    ctx.fillStyle = css(mixc([120, 116, 110], pal.deep, 0.4));
+    ctx.fillStyle = silColor(mixc([120, 116, 110], pal.deep, 0.4));
     for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.ellipse(x + i * 6.5, gy + 1, 4, 3, 0, 0, TAU); ctx.fill(); }
-    ctx.strokeStyle = '#5b3a1e'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.strokeStyle = silColor(hex('#5b3a1e')); ctx.lineWidth = 4; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x - 11, gy - 1); ctx.lineTo(x + 9, gy - 9); ctx.moveTo(x + 11, gy - 1); ctx.lineTo(x - 9, gy - 9); ctx.stroke();
     if (!o.hit) {
       const tt = Env.time * 12 + o.seed;
@@ -2156,11 +2167,11 @@ function drawObstacle(o, pal) {
   } else {
     // Broken cart
     ctx.translate(x, gy); ctx.rotate(-0.12);
-    ctx.fillStyle = '#6e4a2a'; ctx.fillRect(-w / 2, -h, w * 0.85, h * 0.6);
-    ctx.fillStyle = '#4f331c';
+    ctx.fillStyle = silColor(hex('#6e4a2a')); ctx.fillRect(-w / 2, -h, w * 0.85, h * 0.6);
+    ctx.fillStyle = silColor(hex('#4f331c'));
     for (let i = 1; i < 4; i++) ctx.fillRect(-w / 2, -h + i * h * 0.15, w * 0.85, 1.4);
     ctx.fillRect(-w / 2 + 4, -h - 8, 4, 10); ctx.fillRect(w * 0.2, -h - 5, 4, 7);
-    ctx.strokeStyle = '#5b3a1e'; ctx.lineWidth = 3;
+    ctx.strokeStyle = silColor(hex('#5b3a1e')); ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(-w * 0.18, -h * 0.28, h * 0.3, 0, TAU); ctx.stroke();
     ctx.lineWidth = 1.5;
     for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; ctx.beginPath(); ctx.moveTo(-w * 0.18 - Math.cos(an) * h * 0.3, -h * 0.28 - Math.sin(an) * h * 0.3); ctx.lineTo(-w * 0.18 + Math.cos(an) * h * 0.3, -h * 0.28 + Math.sin(an) * h * 0.3); ctx.stroke(); }
@@ -2194,9 +2205,9 @@ function drawRail(r, pal) {
     ctx.stroke();
   } else {
     const n = r.pts.length, x0 = r.x0, x1 = r.x1, y0 = r.pts[0], y1 = r.pts[n - 1];
-    ctx.strokeStyle = '#4f361f'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.strokeStyle = silColor(hex('#4f361f')); ctx.lineWidth = 5; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x0 - 3, y0 + 8); ctx.lineTo(x0 - 3, y0 - 38); ctx.moveTo(x1 + 3, y1 + 8); ctx.lineTo(x1 + 3, y1 - 38); ctx.stroke();
-    ctx.strokeStyle = '#8b6b43'; ctx.lineWidth = 1.6;
+    ctx.strokeStyle = silColor(hex('#8b6b43')); ctx.lineWidth = 1.6;
     ctx.beginPath();
     for (let i = 0; i < n; i++) { const x = x0 + i * r.step, y = r.pts[i] - 30 + (r.pts[i] - lerp(y0, y1, i / (n - 1))) * 0.2; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y - 8); }
     ctx.stroke();
@@ -2206,7 +2217,7 @@ function drawRail(r, pal) {
     ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(x0, y0);
     for (let i = 1; i < n; i++) ctx.lineTo(x0 + i * r.step, r.pts[i]);
     ctx.stroke();
-    ctx.fillStyle = '#6b4a2a';
+    ctx.fillStyle = silColor(hex('#6b4a2a'));
     for (let i = 0; i < n; i++) ctx.fillRect(x0 + i * r.step - 5, r.pts[i] - 1, 10, 4.5);
   }
 }
@@ -2289,11 +2300,67 @@ function drawTerrain(pal, x0, x1, bottom) {
   }
 }
 
+/* ---- Silhouettes: in poster lands, figures on the ground turn to solid shadow ---- */
+const silCv = document.createElement('canvas'); silCv.width = silCv.height = 400;
+const sctx = silCv.getContext('2d');
+let SIL = null; // { col, arr, amt } for the current frame
+function silColor(c) { return SIL ? css(mixc(c, SIL.arr, SIL.amt)) : css(c); }
+/** Draw fn (origin-relative) at x,y; in poster lands overlay it as a flat silhouette. */
+function drawSil(x, y, ang, ext, fn) {
+  if (!SIL || SIL.amt < 0.02) { ctx.save(); ctx.translate(x, y); ctx.rotate(ang); const r = fn(ctx); ctx.restore(); return r; }
+  const k = Math.min(cam.z * DPR, 400 / (2 * ext)), px = Math.ceil(2 * ext * k);
+  sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.globalAlpha = 1; sctx.globalCompositeOperation = 'source-over';
+  sctx.clearRect(0, 0, px + 2, px + 2);
+  sctx.setTransform(k, 0, 0, k, px / 2, px / 2); sctx.rotate(ang);
+  const r = fn(sctx);
+  sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.globalAlpha = 1; sctx.globalCompositeOperation = 'source-in';
+  sctx.fillStyle = SIL.col; sctx.fillRect(0, 0, px, px); sctx.globalCompositeOperation = 'source-over';
+  if (SIL.amt < 0.98) { ctx.save(); ctx.translate(x, y); ctx.rotate(ang); fn(ctx); ctx.restore(); }
+  const a0 = ctx.globalAlpha; ctx.globalAlpha = a0 * SIL.amt;
+  ctx.drawImage(silCv, 0, 0, px, px, x - ext, y - ext, 2 * ext, 2 * ext);
+  ctx.globalAlpha = a0;
+  return r;
+}
+
+/* ---- Framing branches (poster lands with a forest edge) ---- */
+function drawFrame(pal) {
+  const a = pal.frame || 0;
+  if (a < 0.02) return;
+  const col = css(mixc(pal.deep, [0, 0, 0], 0.15)), S = Math.min(VW, VH);
+  ctx.globalAlpha = a; ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineCap = 'round';
+  const limb = (x0, y0, cx, cy, x1, y1, w) => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(cx, cy, x1, y1); ctx.stroke(); };
+  // Left tree: trunk up the edge, boughs reaching over the top.
+  limb(-S * 0.04, VH + 10, S * 0.06, VH * 0.55, S * 0.02, -10, S * 0.07);
+  limb(S * 0.03, VH * 0.35, VW * 0.12, VH * 0.1, VW * 0.3, VH * 0.06, S * 0.018);
+  limb(S * 0.03, VH * 0.2, VW * 0.1, VH * 0.02, VW * 0.22, VH * 0.14, S * 0.012);
+  // Right tree: boughs hanging in from the top corner.
+  limb(VW + 10, VH * 0.05, VW * 0.88, VH * 0.02, VW * 0.72, VH * 0.1, S * 0.018);
+  limb(VW + 10, VH * 0.2, VW * 0.9, VH * 0.12, VW * 0.8, VH * 0.2, S * 0.012);
+  ctx.beginPath();
+  const leaves = (x0, wdt, hgt, seed, dir) => {
+    for (let i = 0; i < 70; i++) {
+      const u = Math.pow(hash(i, seed), 0.8), x = x0 + dir * u * wdt;
+      const y = Math.pow(hash(i, seed + 1), 1.4) * hgt * (1 - u * 0.55);
+      for (let j = 0; j < 3; j++) {
+        const r = S * (0.008 + hash(i * 3 + j, seed + 2) * 0.016);
+        const lx = x + (hash(i * 3 + j, seed + 3) - 0.5) * S * 0.03, ly = y + (hash(i * 3 + j, seed + 4) - 0.5) * S * 0.03;
+        ctx.moveTo(lx + r, ly); ctx.arc(lx, ly, r, 0, TAU);
+      }
+    }
+  };
+  leaves(0, VW * 0.36, VH * 0.24, 501, 1);
+  leaves(VW, VW * 0.3, VH * 0.2, 511, -1);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
 /* ---- Everything in world space ---- */
 function drawWorld(pal) {
   const vw = VW / cam.z, vh = VH / cam.z;
   const x0 = cam.x - 120, x1 = cam.x + vw + 120, bottom = cam.y + vh + 60;
   const inView = x => x > x0 - 150 && x < x1 + 150;
+  const silArr = mixc(pal.deep, [0, 0, 0], 0.2);
+  SIL = (pal.poster || 0) > 0.02 ? { arr: silArr, col: css(silArr), amt: pal.poster } : null;
 
   for (const d of W.decor) if (inView(d.x)) drawDecor(d, pal);
   // Mist rising out of each chasm.
@@ -2330,8 +2397,8 @@ function drawWorld(pal) {
     }
   }
   // Lost sheep on the slopes.
-  for (const s of W.sheep) if (!s.gathered && inView(s.x)) drawSheep(ctx, s.x, s.y, s.dir, s.ph, !!s.vx);
-  for (const f of fleeing) { ctx.globalAlpha = clamp(f.life, 0, 1); drawSheep(ctx, f.x, f.y, -1, f.ph, true); ctx.globalAlpha = 1; }
+  for (const s of W.sheep) if (!s.gathered && inView(s.x)) drawSil(s.x, s.y, 0, 24, c => drawSheep(c, 0, 0, s.dir, s.ph, !!s.vx));
+  for (const f of fleeing) { ctx.globalAlpha = clamp(f.life, 0, 1); drawSil(f.x, f.y, 0, 24, c => drawSheep(c, 0, 0, -1, f.ph, true)); ctx.globalAlpha = 1; }
 
   const inRun = mode === 'play' || mode === 'dying' || mode === 'paused' || mode === 'over';
   if (inRun) {
@@ -2340,20 +2407,22 @@ function drawWorld(pal) {
     for (let i = n - 1; i >= 0; i--) {
       const idx = H.length - 2 - (i + 1) * 20;
       if (idx < 0) continue;
-      drawSheep(ctx, H[idx], H[idx + 1], 1, Env.time * 12 + i, true);
+      drawSil(H[idx], H[idx + 1], 0, 24, c => drawSheep(c, 0, 0, 1, Env.time * 12 + i, true));
     }
     if (Lion.active || (run.cause === 'lion' && P.state === 'dead')) {
       const ly = lionY(Lion.x);
       drawLion(ctx, Lion.x, ly, Lion.t, Lion.alpha, groundAt(Lion.x) === null);
     }
     if (!(P.state === 'dead' && run.cause === 'fell' && run.deadT > 0.8)) {
-      ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(P.angle);
       if (P.invuln > 0 && P.tumbleT <= 0 && Math.sin(P.t * 30) > 0.3) ctx.globalAlpha = 0.55;
       const rd = RIDERS.find(r => r.id === save.rider) || RIDERS[0];
-      const lamp = drawRider(ctx, rd, { crouch: P.state === 'air' ? 0.2 : P.crouch, glide: P.glide, t: P.t, spd: clamp(P.speed / 700, 0.2, 1), boost: P.boostT > 0 });
-      ctx.restore();
+      const lamp = drawSil(P.x, P.y, P.angle, 42, c => drawRider(c, rd, { crouch: P.state === 'air' ? 0.2 : P.crouch, glide: P.glide, t: P.t, spd: clamp(P.speed / 700, 0.2, 1), boost: P.boostT > 0 }));
+      ctx.globalAlpha = 1;
       const ca = Math.cos(P.angle), sa = Math.sin(P.angle);
       P.lampX = P.x + lamp.x * ca - lamp.y * sa; P.lampY = P.y + lamp.x * sa + lamp.y * ca;
+      // The lamp always shines, even when the pilgrim is a silhouette.
+      ctx.fillStyle = P.boostT > 0 ? '#ffffff' : '#fff1a8';
+      ctx.beginPath(); ctx.arc(P.lampX, P.lampY + 0.5, 2.3, 0, TAU); ctx.fill();
       const flick = 1 + Math.sin(Env.time * 13) * 0.04 + Math.sin(Env.time * 7.3) * 0.04;
       lights.push({ x: P.lampX, y: P.lampY, r: (P.boostT > 0 ? 520 : 290) * flick, warm: P.boostT > 0 ? 1.2 : 0.8, lamp: true });
     }
@@ -2530,6 +2599,7 @@ function render(dt) {
   ctx.setTransform(z, 0, 0, z, (-cam.x * cam.z + shx) * DPR, (-cam.y * cam.z + shy) * DPR);
   drawWorld(pal);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawFrame(pal);
   drawWeather(dt, pal);
   drawLighting(pal);
   drawOverlays();
