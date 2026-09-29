@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Creek Paddle</title>
+<style>
+  :root { --bg: #111; }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  canvas {
+    display: block;
+    width: 100vw; height: auto;
+    max-height: 100vh; max-width: calc(100vh * 16 / 9);
+  }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+
+<script>
+/* =====================================================================
+   TWEAK HERE
+   ===================================================================== */
+const CONFIG = {
+  fps: 10,               // stop-motion frame rate (10 = choppy, 12 = a bit smoother)
+  loopSeconds: 8,        // loop length. Longer = slower canoe (same distance). Keep a multiple of 0.8
+  canoeWidthPct: 0.14,   // canoe length as a fraction of image width (0.12 to 0.15)
+  waterLineY: 0.705,     // canoe waterline, fraction of image height (0 = top, 1 = bottom)
+  startX: -0.12,         // canoe centre at loop start, fraction of width (off-screen left)
+  endX: 1.12,            // canoe centre at loop end (off-screen right)
+  jitterPx: [1, 2],      // hand-moved jitter range, pixels
+  jitterDeg: 0.5,        // hand-moved rotation jitter, degrees
+  bobPx: 2,              // up/down bob on the water
+  reflectionOpacity: 0.4,
+  showBird: true,
+  grain: 0.10,           // paper grain strength
+  vignette: 0.45,        // vignette darkness at the corners
+};
+/* ===================================================================== */
+
+const W = 1920, H = 1080;
+const DEG = Math.PI / 180;
+const FRAMES = Math.round(CONFIG.fps * CONFIG.loopSeconds);
+const K = (CONFIG.canoeWidthPct * W) / 270;       // artwork is drawn for a 270 px canoe
+const WATER_Y = CONFIG.waterLineY * H;
+const PAPER = '#f4efe4';
+
+const COL = {
+  hull: '#8b5a2b', gunwale: '#5a371b', strake: '#a9743f',
+  paddle: '#c08a50', paddleFar: '#8a6135',
+  shirt: '#27303a', skin: '#d6a079', hat: '#c4a46b', hatBand: '#4a3520',
+  bird: '#2b2b2e',
+};
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+/* ---------- helpers ---------- */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const sgn = r => (r() < 0.5 ? -1 : 1);
+const rr = (r, a) => (r() * 2 - 1) * a;
+
+// Scissor-cut edges: subdivide and nudge each point. Same seed = same cut every frame.
+function roughen(pts, seed, amp = 0.6, seg = 5) {
+  const r = mulberry32(seed), out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    const m = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / seg));
+    for (let j = 0; j < m; j++) {
+      const t = j / m;
+      out.push([a[0] + (b[0] - a[0]) * t + rr(r, amp), a[1] + (b[1] - a[1]) * t + rr(r, amp)]);
+    }
+  }
+  return out;
+}
+
+function ellipsePts(cx, cy, rx, ry, n = 16, rot = 0) {
+  const p = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+    p.push([cx + x * Math.cos(rot) - y * Math.sin(rot), cy + x * Math.sin(rot) + y * Math.cos(rot)]);
+  }
+  return p;
+}
+
+// Turn a polyline into a flat strip (arms, paddle shaft)
+function ribbon(line, w) {
+  const L = [], R = [];
+  for (let i = 0; i < line.length; i++) {
+    const a = line[Math.max(0, i - 1)], b = line[Math.min(line.length - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1];
+    const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+    L.push([line[i][0] - dy * w / 2, line[i][1] + dx * w / 2]);
+    R.push([line[i][0] + dy * w / 2, line[i][1] - dx * w / 2]);
+  }
+  return L.concat(R.reverse());
+}
+
+// One paper cut-out piece: white card border, flat fill, its own tiny hand-placed wobble
+function cut(c, rng, pts, fill, seed, border = 4, amp = 0.6) {
+  const p = roughen(pts, seed, amp);
+  let cx = 0, cy = 0;
+  for (const q of p) { cx += q[0]; cy += q[1]; }
+  cx /= p.length; cy /= p.length;
+  c.save();
+  c.translate(cx + rr(rng, 0.5), cy + rr(rng, 0.5));
+  c.rotate(rr(rng, 0.35) * DEG);
+  c.translate(-cx, -cy);
+  c.beginPath();
+  p.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
+  c.closePath();
+  c.lineJoin = 'round';
+  c.lineWidth = border;
+  c.strokeStyle = PAPER;
+  c.stroke();
+  c.fillStyle = fill;
+  c.fill();
+  c.restore();
+}
+
+/* ---------- motion tables ---------- */
+// 4-frame stroke: catch, pull, exit, recover. Surge weights per pose (average 1).
+const SURGE = [0.7, 1.6, 1.1, 0.6];
+const POSES = [
+  { lean: 7, grip: [8, -58], ang: 38 },    // catch: blade goes in ahead
+  { lean: 3, grip: [0, -60], ang: 8 },     // pull: blade buried, body drives
+  { lean: -2, grip: [-12, -52], ang: -40 },// exit: blade comes out behind
+  { lean: 4, grip: [6, -50], ang: 94 },    // recover: paddle swings forward, switches side
+];
+const PADDLE_LEN = 84;
+const BOB = [0, -1, -2, -1, 0, 1, 2, 1];
+
+const startPx = CONFIG.startX * W, endPx = CONFIG.endX * W;
+const XS = [];
+{
+  const step = (endPx - startPx) / FRAMES;
+  let x = startPx;
+  for (let f = 0; f < FRAMES; f++) { XS.push(x); x += step * SURGE[f % 4]; }
+}
+const wrap = f => ((f % FRAMES) + FRAMES) % FRAMES;
+const canoeX = f => XS[wrap(f)];
+const poseOf = f => wrap(f) % 4;
+const sideOf = f => Math.floor(wrap(f) / 4) % 2;   // 0 = near side, 1 = far side
+
+/* ---------- offscreen layers ---------- */
+const SPR = { w: 420, h: 180, ox: 200, oy: 140 };   // artwork units; origin = waterline centre
+const sprite = document.createElement('canvas');
+sprite.width = Math.ceil(SPR.w * K); sprite.height = Math.ceil(SPR.h * K);
+const sctx = sprite.getContext('2d');
+const reflect = document.createElement('canvas');
+reflect.width = sprite.width; reflect.height = sprite.height;
+const rctx = reflect.getContext('2d');
+
+const grain = document.createElement('canvas');
+grain.width = grain.height = 256;
+{
+  const g = grain.getContext('2d'), img = g.createImageData(256, 256), r = mulberry32(99);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 128 + (r() - 0.5) * 255 * (0.6 + r() * 0.4);
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+}
+const grainPattern = ctx.createPattern(grain, 'repeat');
+
+const vignette = document.createElement('canvas');
+vignette.width = W; vignette.height = H;
+{
+  const v = vignette.getContext('2d');
+  const gr = v.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.72);
+  gr.addColorStop(0, 'rgba(0,0,0,0)');
+  gr.addColorStop(1, `rgba(0,0,0,${CONFIG.vignette})`);
+  v.fillStyle = gr; v.fillRect(0, 0, W, H);
+}
+
+/* ---------- canoe + paddler sprite ---------- */
+function drawPaddle(c, rng, pose, far) {
+  const [gx, gy] = pose.grip.map((v, i) => v + (far ? [-2, 2][i] : 0));
+  const a = pose.ang * DEG;
+  const tx = gx + Math.sin(a) * PADDLE_LEN, ty = gy + Math.cos(a) * PADDLE_LEN;
+  const bx = gx + (tx - gx) * 0.68, by = gy + (ty - gy) * 0.68;
+  const fill = far ? COL.paddleFar : COL.paddle;
+  c.save();
+  // hide whatever is under the water
+  c.beginPath(); c.rect(-SPR.ox, -SPR.oy, SPR.w, SPR.oy + 1); c.clip();
+  cut(c, rng, ribbon([[gx, gy], [bx, by]], 3), fill, 301);
+  const nx = Math.cos(a), ny = -Math.sin(a);   // across the blade
+  const blade = [
+    [bx + nx * 2, by + ny * 2], [bx + (tx - bx) * 0.3 + nx * 4.5, by + (ty - by) * 0.3 + ny * 4.5],
+    [tx + nx * 3.5, ty + ny * 3.5], [tx, ty], [tx - nx * 3.5, ty - ny * 3.5],
+    [bx + (tx - bx) * 0.3 - nx * 4.5, by + (ty - by) * 0.3 - ny * 4.5], [bx - nx * 2, by - ny * 2],
+  ];
+  cut(c, rng, blade, fill, 302);
+  cut(c, rng, ribbon([[gx - nx * 4, gy - ny * 4], [gx + nx * 4, gy + ny * 4]], 3), fill, 303);
+  c.restore();
+  return { gx, gy, lx: gx + (tx - gx) * 0.4, ly: gy + (ty - gy) * 0.4 };
+}
+
+function hullPts() {
+  const top = [], bot = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = -1 + (i / 24) * 2;
+    top.push([137 * t, -11 - 4 * t * t - 10 * t ** 8]);
+  }
+  for (let i = 24; i >= 0; i--) {
+    const t = -1 + (i / 24) * 2;
+    bot.push([128 * t, 3 - 17 * Math.abs(t) ** 5]);
+  }
+  return { top, bot };
+}
+const HULL = hullPts();
+
+function drawSprite(f, rng) {
+  const c = sctx;
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.clearRect(0, 0, sprite.width, sprite.height);
+  c.setTransform(K, 0, 0, K, SPR.ox * K, SPR.oy * K);
+
+  const pose = POSES[poseOf(f)], far = sideOf(f) === 1;
+  const sx = -8 + pose.lean, sy = -40;              // shoulder
+  const hx = sx + 3, hy = sy - 10;                   // head
+
+  let hands;
+  if (far) hands = drawPaddle(c, rng, pose, true);
+
+  // torso
+  cut(c, rng, [[-21, -4], [1, -4], [sx + 7, sy + 3], [sx + 3, sy - 3], [sx - 6, sy - 2], [sx - 10, sy + 8]], COL.shirt, 101);
+  // head + hat
+  cut(c, rng, ellipsePts(hx, hy, 6.2, 6.8, 14), COL.skin, 102, 3.5);
+  cut(c, rng, [[hx - 5, hy - 4], [hx - 4.2, hy - 10.5], [hx + 4.2, hy - 10.5], [hx + 5.5, hy - 4]], COL.hat, 103, 3.5, 0.4);
+  cut(c, rng, ellipsePts(hx + 0.5, hy - 4, 15.5, 2.5, 18, -4 * DEG), COL.hat, 104, 3.5, 0.3);
+  cut(c, rng, [[hx - 5, hy - 5.5], [hx + 5.3, hy - 5.5], [hx + 5.3, hy - 7], [hx - 5, hy - 7]], COL.hatBand, 105, 0.01, 0.2);
+
+  // hull layers
+  cut(c, rng, HULL.top.concat(HULL.bot), COL.hull, 201);
+  const band = (d0, d1, a, b) => {
+    const s = HULL.top.slice(a, b);
+    return s.map(p => [p[0], p[1] + d0]).concat(s.slice().reverse().map(p => [p[0], p[1] + d1]));
+  };
+  cut(c, rng, band(-0.5, 4, 1, 24), COL.gunwale, 202, 2.5, 0.4);
+  cut(c, rng, band(8.5, 10.5, 3, 22), COL.strake, 203, 0.01, 0.4);
+
+  if (!far) hands = drawPaddle(c, rng, pose, false);
+
+  // arms: shoulder -> elbow -> hand, sleeves in shirt colour
+  const arm = (hx2, hy2, seed) => {
+    const ex = (sx + hx2) / 2 - 2, ey = (sy + hy2) / 2 + 5;
+    cut(c, rng, ribbon([[sx, sy + 1], [ex, ey], [hx2, hy2]], 5), COL.shirt, seed, 3.5);
+    cut(c, rng, ellipsePts(hx2, hy2, 2.6, 2.6, 8), COL.skin, seed + 1, 2.5, 0.2);
+  };
+  arm(hands.lx, hands.ly, 111);
+  arm(hands.gx, hands.gy, 121);
+}
+
+/* ---------- water marks: wake, ripples ---------- */
+function drawWater(f, rng) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  // V wake from the stern, one mark per past frame, spreading and fading
+  for (let a = 1; a <= 8; a++) {
+    const sx = canoeX(f - a) - 126 * K;
+    const alpha = 0.5 * (1 - a / 9);
+    const len = (12 + a * 2) * K;
+    const near = WATER_Y + (3 + a * 2.4) * K + rr(rng, 0.8);
+    const farY = WATER_Y - (1 + a * 1.1) * K + rr(rng, 0.8);
+    for (const [col, off] of [[`rgba(20,30,26,${alpha * 0.6})`, 1.8], [`rgba(240,245,242,${alpha * 1.5})`, 0]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(sx - len / 2, near - 1 + off); ctx.lineTo(sx + len / 2, near - 2.5 * K + off);
+      ctx.moveTo(sx - len / 2, farY + 0.5 + off); ctx.lineTo(sx + len / 2, farY + 1.5 * K + off);
+      ctx.stroke();
+    }
+  }
+  // bow wave + waterline contact
+  const x = canoeX(f);
+  ctx.strokeStyle = 'rgba(240,244,240,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x - 122 * K, WATER_Y + 3 * K); ctx.lineTo(x + 118 * K, WATER_Y + 3 * K);
+  ctx.moveTo(x + 126 * K, WATER_Y + 2 * K); ctx.lineTo(x + 138 * K, WATER_Y + 6 * K);
+  ctx.moveTo(x + 124 * K, WATER_Y + 0 * K); ctx.lineTo(x + 140 * K, WATER_Y - 2 * K);
+  ctx.stroke();
+
+  // ripple rings at each paddle dip (catch) and a small one at the exit
+  for (let age = 0; age <= 7; age++) {
+    const g = f - age, p = poseOf(g);
+    if (p !== 0 && p !== 2) continue;
+    const farSide = sideOf(g) === 1;
+    const rx0 = canoeX(g) + (p === 0 ? 56 : -52) * K;
+    const ry0 = WATER_Y + (farSide ? -3 : 7) * K;
+    const size = p === 0 ? 1 : 0.7;
+    for (let ring = 0; ring < 2; ring++) {
+      const ra = age - ring * 1.5;
+      if (ra < 0) continue;
+      const rx = (5 + ra * 8) * K * size;
+      const al = 1 - age / 8;
+      ctx.lineWidth = 1.7;
+      ctx.strokeStyle = `rgba(20,30,26,${0.45 * al})`;
+      ctx.beginPath(); ctx.ellipse(rx0, ry0 + 1.6, rx, rx * 0.26, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = `rgba(242,246,243,${0.85 * al})`;
+      ctx.beginPath(); ctx.ellipse(rx0, ry0, rx, rx * 0.26, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/* ---------- bird ---------- */
+function drawBird(f, rng) {
+  const t0 = Math.round(FRAMES * 0.16), t1 = Math.round(FRAMES * 0.62);
+  if (f < t0 || f > t1) return;
+  const p = (f - t0) / (t1 - t0);
+  const x = 1560 - p * 940, y = 262 - Math.sin(p * Math.PI) * 28 + Math.sin(p * 9) * 5;
+  const flap = [0, 1, 2, 1][f % 4];
+  const tip = [[2, -13], [8, -3], [4, 9]][flap];
+  const b = document.createElement('canvas');
+  b.width = b.height = 80;
+  const c = b.getContext('2d');
+  c.setTransform(1.5, 0, 0, 1.5, 40, 40);
+  cut(c, rng, [[-1, 0], [5, 0], [tip[0] + 3, tip[1]]], '#3a3a3e', 501, 2.5, 0.3);            // far wing
+  cut(c, rng, [[6, -1], [13, -3], [12, 2], [6, 1.5]], COL.bird, 502, 2.5, 0.3);              // tail
+  cut(c, rng, ellipsePts(0, 0, 7.5, 2.8, 14), COL.bird, 503, 2.5, 0.3);                      // body
+  cut(c, rng, ellipsePts(-7.5, -1.2, 2.6, 2.4, 10), COL.bird, 504, 2.5, 0.2);                // head
+  cut(c, rng, [[-9.8, -1.6], [-13, -0.6], [-9.8, -0.2]], '#6b5a3a', 505, 1.5, 0.1);          // beak
+  cut(c, rng, [[-3, 0], [3, 0], [tip[0], tip[1]]], COL.bird, 506, 2.5, 0.3);                 // near wing
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+  ctx.translate(x + rr(rng, 1.5), y + rr(rng, 1.5));
+  ctx.rotate(rr(rng, CONFIG.jitterDeg) * DEG);
+  ctx.drawImage(b, -40, -40);
+  ctx.restore();
+}
+
+/* ---------- one frame ---------- */
+let BG = null;
+function render(f) {
+  f = wrap(f);
+  const rng = mulberry32(f * 7919 + 13);
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(BG, 0, 0, W, H);
+
+  // hand-moved jitter for the whole canoe group
+  const [jMin, jMax] = CONFIG.jitterPx;
+  const jx = sgn(rng) * (jMin + rng() * (jMax - jMin));
+  const jy = sgn(rng) * (jMin + rng() * (jMax - jMin)) * 0.6;
+  const jr = rr(rng, CONFIG.jitterDeg) * DEG;
+  const bob = BOB[f % 8] * CONFIG.bobPx / 2;
+  const x = canoeX(f) + jx, y = WATER_Y + bob + jy;
+
+  drawSprite(f, rng);
+
+  // reflection: flipped, darker, 3 px strips nudged sideways
+  rctx.setTransform(1, 0, 0, 1, 0, 0);
+  rctx.globalCompositeOperation = 'source-over';
+  rctx.clearRect(0, 0, reflect.width, reflect.height);
+  rctx.drawImage(sprite, 0, 0);
+  rctx.globalCompositeOperation = 'source-atop';
+  rctx.fillStyle = 'rgba(12,20,16,0.38)';
+  rctx.fillRect(0, 0, reflect.width, reflect.height);
+
+  const oy = Math.round(SPR.oy * K), ox = SPR.ox * K;
+  const reflY = WATER_Y - bob + 2 * K;               // mirror line (reflection moves opposite to the bob)
+  ctx.save();
+  for (let row = 0; row < oy; row += 3) {
+    const depth = row / oy;
+    const dx = Math.sin(row * 0.35 + f * 1.7) * (1 + depth * 2.5);
+    ctx.globalAlpha = CONFIG.reflectionOpacity * (1 - depth * 0.5);
+    ctx.save();
+    ctx.translate(x - ox + dx, reflY + row);
+    ctx.scale(1, -1);
+    const sy0 = Math.max(0, oy - row - 3);
+    ctx.drawImage(reflect, 0, sy0, reflect.width, oy - row - sy0, 0, sy0 - (oy - row), reflect.width, oy - row - sy0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  drawWater(f, rng);
+
+  // the cut-out itself, with a soft paper shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.42)';
+  ctx.shadowBlur = 7; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 4;
+  ctx.translate(x, y);
+  ctx.rotate(jr);
+  ctx.drawImage(sprite, -ox, -oy);
+  ctx.restore();
+
+  if (CONFIG.showBird) drawBird(f, rng);
+
+  // exposure flicker, paper grain, vignette
+  ctx.fillStyle = `rgba(0,0,0,${rng() * 0.035})`;
+  ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  ctx.globalAlpha = CONFIG.grain;
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.translate(-Math.floor(rng() * 256), -Math.floor(rng() * 256));
+  ctx.fillStyle = grainPattern;
+  ctx.fillRect(0, 0, W + 256, H + 256);
+  ctx.restore();
+  ctx.drawImage(vignette, 0, 0);
+}
+
+/* ---------- playback ---------- */
+window.TOTAL_FRAMES = FRAMES;
+window.renderFrame = render;
+window.exportFrame = f => { render(f); return canvas.toDataURL('image/png'); };
+
+window.addEventListener('DOMContentLoaded', () => {
+const img = new Image();
+img.onload = () => {
+  BG = img;
+  window.READY = true;
+  if (new URLSearchParams(location.search).has('export')) { render(0); return; }
+  let frame = 0, last = -Infinity;
+  const tick = t => {
+    if (t - last >= 1000 / CONFIG.fps) {
+      last = t;
+      render(frame);
+      frame = (frame + 1) % FRAMES;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+};
+img.src = 'data:image/jpeg;base64,' + document.getElementById('bg-data').textContent.trim();
+});
+</script>
+
+<!-- background photo (stream.jpg, cropped to 16:9), embedded so this file stands alone -->
+<script id="bg-data" type="text/plain">
+__BG_BASE64__
+</script>
+</body>
+</html>
