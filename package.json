@@ -1,11 +1,15 @@
 {
-  "name": "teachfocus",
+  "name": "alpha-youth-signup",
   "version": "1.0.0",
-  "description": "Pomodoro study app for primary school teaching students",
+  "description": "Sign-up form for Alpha Youth faith-based youth program",
+  "main": "server.js",
   "scripts": {
-    "start": "npx serve . -l 3000",
-    "dev": "npx serve . -l 3000"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": ["pomodoro", "study", "teaching", "education"],
+  "engines": {
+    "node": ">=14"
+  },
+  "keywords": ["alpha-youth", "signup", "notion"],
   "license": "MIT"
 }

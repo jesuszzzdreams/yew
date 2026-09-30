@@ -1,195 +1,582 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TeachFocus — Pomodoro Study App</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alpha Youth — Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #111110;
+      --surface:      #1c1b18;
+      --surface-2:    #242420;
+      --border:       #2e2d28;
+      --orange:       #e07535;
+      --orange-dark:  #c85f20;
+      --gold:         #d4a843;
+      --olive:        #8a9552;
+      --text:         #f0ece3;
+      --text-2:       #a09c93;
+      --text-3:       #6b6762;
+      --input-bg:     #f9f5ed;
+      --input-text:   #1c1b18;
+      --placeholder:  #b5ae9f;
+      --error:        #d95b5b;
+      --error-bg:     rgba(217,91,91,0.08);
+      --error-border: rgba(217,91,91,0.25);
+      --focus-ring:   rgba(224,117,53,0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(224,117,53,0.09) 0%, transparent 65%);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 3rem 1.25rem 5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── BRAND HEADER ───────────────────────────────── */
+    .brand {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeDown 0.55s ease both;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, var(--orange) 0%, var(--gold) 100%);
+      box-shadow: 0 8px 28px rgba(224,117,53,0.32);
+      margin-bottom: 1.125rem;
+    }
+
+    .brand-mark svg { width: 30px; height: 30px; }
+
+    .brand-name {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1;
+      background: linear-gradient(130deg, var(--text) 30%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .brand-tag {
+      display: inline-block;
+      margin-top: 0.625rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--orange);
+    }
+
+    /* ── FORM CARD ──────────────────────────────────── */
+    .card {
+      width: 100%;
+      max-width: 580px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      animation: fadeUp 0.55s 0.08s ease both;
+    }
+
+    .card-title {
+      font-size: 1.375rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 0.375rem;
+    }
+
+    .card-sub {
+      font-size: 0.9375rem;
+      color: var(--text-2);
+      line-height: 1.55;
+      margin-bottom: 2rem;
+    }
+
+    /* ── SECTIONS ───────────────────────────────────── */
+    .section-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      padding-bottom: 0.625rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.125rem;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.75rem 0;
+    }
+
+    .field-grid { display: grid; gap: 1rem; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* ── FORM GROUPS ────────────────────────────────── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4375rem;
+    }
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-2);
+      user-select: none;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    select {
+      background: var(--input-bg);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 0.8125rem 1rem;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--input-text);
+      width: 100%;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input::placeholder { color: var(--placeholder); font-weight: 400; }
+
+    input:focus, select:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
+    input.invalid, select.invalid {
+      border-color: var(--error);
+      box-shadow: 0 0 0 4px rgba(217,91,91,0.1);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a09c93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.875rem center;
+      padding-right: 2.75rem;
+    }
+
+    .field-error {
+      display: none;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--error);
+    }
+
+    .form-group.has-error .field-error { display: block; }
+
+    /* ── SUBMIT AREA ────────────────────────────────── */
+    .submit-area { margin-top: 0.25rem; }
+
+    .api-error {
+      display: none;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: 12px;
+      padding: 0.875rem 1rem;
+      color: #e08585;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .api-error.show { display: block; }
+
+    .btn-submit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 1.0625rem 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      letter-spacing: 0.015em;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(224,117,53,0.28);
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--orange-dark);
+      box-shadow: 0 6px 22px rgba(224,117,53,0.38);
+    }
+
+    .btn-submit:active:not(:disabled) { transform: scale(0.984); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    .btn-spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+
+    .btn-submit.loading .btn-text { opacity: 0; position: absolute; }
+    .btn-submit.loading .btn-spinner { display: block; }
+
+    /* ── THANK YOU ──────────────────────────────────── */
+    .thankyou-wrap {
+      display: none;
+      width: 100%;
+      max-width: 580px;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .thankyou-wrap.show { display: block; }
+    .brand.hide, .card.hide { display: none; }
+
+    .thankyou-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 4rem 2.5rem;
+      text-align: center;
+    }
+
+    .ty-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, var(--orange), var(--gold));
+      box-shadow: 0 12px 36px rgba(224,117,53,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+    }
+
+    .ty-icon svg {
+      width: 38px;
+      height: 38px;
+      stroke: #fff;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .ty-headline {
+      font-size: 2.375rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 0.875rem;
+    }
+
+    .ty-headline em { font-style: normal; color: var(--orange); }
+
+    .ty-body {
+      font-size: 1.0625rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      max-width: 320px;
+      margin: 0 auto 2rem;
+    }
+
+    .ty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.5rem 1.125rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .ty-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--olive);
+      flex-shrink: 0;
+    }
+
+    .ty-footer {
+      margin-top: 2.5rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    /* ── ANIMATIONS ─────────────────────────────────── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 520px) {
+      body { padding: 2rem 1rem 4rem; }
+      .card { padding: 1.75rem 1.25rem; border-radius: 20px; }
+      .brand-name { font-size: 1.75rem; }
+      .field-row { grid-template-columns: 1fr; }
+      .ty-headline { font-size: 2rem; }
+      .thankyou-card { padding: 3rem 1.5rem; }
+    }
+  </style>
 </head>
 <body>
-  <!-- ═══════════════════════ HEADER ═══════════════════════ -->
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">🌿</span>
-        <span class="logo-text">TeachFocus</span>
-      </div>
-      <div class="header-stats">
-        <div class="stat-pill" id="stat-sessions">
-          <span class="stat-icon">🍅</span>
-          <span id="sessions-count">0</span>
-          <span class="stat-label">today</span>
-        </div>
-        <div class="stat-pill" id="stat-time">
-          <span class="stat-icon">⏱</span>
-          <span id="focus-time">0m</span>
-          <span class="stat-label">focused</span>
-        </div>
-      </div>
+
+  <!-- BRAND HEADER -->
+  <header class="brand" id="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="15,4 2,26 28,26" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+        <line x1="15" y1="4" x2="15" y2="18" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
     </div>
+    <div class="brand-name">ALPHA YOUTH</div>
+    <div class="brand-tag">Register for the series</div>
   </header>
 
-  <main class="app-main">
-    <div class="layout">
+  <!-- FORM CARD -->
+  <main class="card" id="formCard">
+    <h1 class="card-title">Join the series</h1>
+    <p class="card-sub">Fill in the details below. Takes less than a minute.</p>
 
-      <!-- ═══════════════════ LEFT COLUMN ═══════════════════ -->
-      <div class="col-left">
+    <form id="signupForm" novalidate>
 
-        <!-- MODE SELECTOR -->
-        <div class="mode-tabs" role="tablist">
-          <button class="mode-tab active" data-mode="pomodoro" role="tab">Study 25m</button>
-          <button class="mode-tab" data-mode="short" role="tab">Short Break 5m</button>
-          <button class="mode-tab" data-mode="long" role="tab">Long Break 15m</button>
-        </div>
-
-        <!-- TIMER CARD -->
-        <div class="timer-card">
-          <div class="timer-ring-wrapper">
-            <svg class="timer-ring" viewBox="0 0 220 220">
-              <circle class="ring-bg" cx="110" cy="110" r="96" />
-              <circle class="ring-progress" id="ring-progress" cx="110" cy="110" r="96"
-                stroke-dasharray="603.2" stroke-dashoffset="0" />
-            </svg>
-            <div class="timer-display">
-              <div class="timer-time" id="timer-display">25:00</div>
-              <div class="timer-mode-label" id="timer-mode-label">Focus Time</div>
-            </div>
+      <!-- STUDENT -->
+      <div class="section-label">About the student</div>
+      <div class="field-grid">
+        <div class="field-row">
+          <div class="form-group" id="g-firstName">
+            <label for="firstName">First name</label>
+            <input type="text" id="firstName" placeholder="Jordan" autocomplete="given-name">
+            <span class="field-error">First name is required.</span>
           </div>
-
-          <!-- POMODORO DOTS -->
-          <div class="pomodoro-dots" id="pomodoro-dots">
-            <span class="dot active" data-idx="0"></span>
-            <span class="dot" data-idx="1"></span>
-            <span class="dot" data-idx="2"></span>
-            <span class="dot" data-idx="3"></span>
+          <div class="form-group" id="g-lastName">
+            <label for="lastName">Last name</label>
+            <input type="text" id="lastName" placeholder="Smith" autocomplete="family-name">
+            <span class="field-error">Last name is required.</span>
           </div>
-
-          <!-- CONTROLS -->
-          <div class="timer-controls">
-            <button class="btn-control btn-reset" id="btn-reset" title="Reset">↺</button>
-            <button class="btn-control btn-primary" id="btn-start">Start</button>
-            <button class="btn-control btn-skip" id="btn-skip" title="Skip">⏭</button>
-          </div>
-
-          <!-- AUTO-START TOGGLE -->
-          <label class="auto-toggle">
-            <input type="checkbox" id="auto-start" />
-            <span class="toggle-slider"></span>
-            <span class="toggle-label">Auto-start next session</span>
-          </label>
         </div>
-
-        <!-- MOTIVATIONAL QUOTE -->
-        <div class="quote-card" id="quote-card">
-          <p class="quote-text" id="quote-text"></p>
-          <button class="quote-refresh" id="quote-refresh" title="New quote">↻</button>
+        <div class="form-group" id="g-age">
+          <label for="age">Age</label>
+          <input type="number" id="age" placeholder="16" min="10" max="25" inputmode="numeric">
+          <span class="field-error">Please enter a valid age (10–25).</span>
         </div>
-
       </div>
 
-      <!-- ═══════════════════ RIGHT COLUMN ═══════════════════ -->
-      <div class="col-right">
+      <div class="divider"></div>
 
-        <!-- CURRENT TOPIC -->
-        <div class="section-card topic-section">
-          <div class="section-header">
-            <h2 class="section-title">📚 Studying Now</h2>
-          </div>
-          <select class="topic-select" id="topic-select">
-            <option value="">— Choose a topic —</option>
-            <optgroup label="Core Teaching">
-              <option value="Child Development &amp; Psychology">Child Development &amp; Psychology</option>
-              <option value="Curriculum Design &amp; Planning">Curriculum Design &amp; Planning</option>
-              <option value="Lesson Planning">Lesson Planning</option>
-              <option value="Assessment &amp; Feedback Strategies">Assessment &amp; Feedback Strategies</option>
-              <option value="Classroom Management">Classroom Management</option>
-            </optgroup>
-            <optgroup label="Literacy &amp; Numeracy">
-              <option value="Phonics &amp; Early Reading">Phonics &amp; Early Reading</option>
-              <option value="Literacy Methods &amp; Writing">Literacy Methods &amp; Writing</option>
-              <option value="Numeracy &amp; Maths Teaching">Numeracy &amp; Maths Teaching</option>
-            </optgroup>
-            <optgroup label="Inclusion &amp; Wellbeing">
-              <option value="SEND &amp; Inclusion Strategies">SEND &amp; Inclusion Strategies</option>
-              <option value="Behaviour &amp; Pastoral Care">Behaviour &amp; Pastoral Care</option>
-              <option value="PSHE &amp; Wellbeing">PSHE &amp; Wellbeing</option>
-            </optgroup>
-            <optgroup label="Subject Areas">
-              <option value="Science &amp; STEM">Science &amp; STEM</option>
-              <option value="Creative Arts">Creative Arts</option>
-              <option value="Physical Education">Physical Education</option>
-              <option value="ICT &amp; Digital Literacy">ICT &amp; Digital Literacy</option>
-              <option value="History &amp; Geography">History &amp; Geography</option>
-              <option value="Religious Education">Religious Education</option>
-            </optgroup>
-            <optgroup label="Professional Practice">
-              <option value="Safeguarding &amp; Child Protection">Safeguarding &amp; Child Protection</option>
-              <option value="Professional Standards &amp; Ethics">Professional Standards &amp; Ethics</option>
-              <option value="Parent &amp; Community Engagement">Parent &amp; Community Engagement</option>
-              <option value="Reflective Practice">Reflective Practice</option>
-            </optgroup>
-          </select>
+      <!-- PARENT / GUARDIAN -->
+      <div class="section-label">Parent / Guardian</div>
+      <div class="field-grid">
+        <div class="form-group" id="g-parentName">
+          <label for="parentName">Full name</label>
+          <input type="text" id="parentName" placeholder="Alex Smith" autocomplete="name">
+          <span class="field-error">Parent / Guardian name is required.</span>
         </div>
-
-        <!-- TASK LIST -->
-        <div class="section-card task-section">
-          <div class="section-header">
-            <h2 class="section-title">✅ Today's Tasks</h2>
-            <span class="task-counter" id="task-counter">0/0</span>
-          </div>
-          <div class="task-input-row">
-            <input
-              class="task-input"
-              id="task-input"
-              type="text"
-              placeholder="Add a study task…"
-              maxlength="120"
-            />
-            <button class="btn-add" id="btn-add-task">+</button>
-          </div>
-          <ul class="task-list" id="task-list">
-            <!-- tasks rendered here -->
-          </ul>
-          <button class="btn-clear-done" id="btn-clear-done">Clear completed</button>
+        <div class="form-group" id="g-parentEmail">
+          <label for="parentEmail">Email address</label>
+          <input type="email" id="parentEmail" placeholder="alex@email.com" autocomplete="email">
+          <span class="field-error">Please enter a valid email address.</span>
         </div>
-
-        <!-- SESSION NOTES -->
-        <div class="section-card notes-section">
-          <div class="section-header">
-            <h2 class="section-title">📝 Session Notes</h2>
-            <button class="btn-clear-notes" id="btn-clear-notes" title="Clear notes">✕</button>
-          </div>
-          <textarea
-            class="notes-area"
-            id="notes-area"
-            placeholder="Jot down key points, ideas, or things to revisit…"
-            spellcheck="true"
-          ></textarea>
+        <div class="form-group" id="g-parentContact">
+          <label for="parentContact">Contact number</label>
+          <input type="tel" id="parentContact" placeholder="+61 400 000 000" autocomplete="tel">
+          <span class="field-error">Please enter a valid phone number.</span>
         </div>
-
       </div>
-    </div>
+
+      <div class="divider"></div>
+
+      <!-- HEARD FROM -->
+      <div class="section-label">Quick question</div>
+      <div class="form-group" id="g-heardFrom">
+        <label for="heardFrom">How did you hear about Alpha Youth?</label>
+        <select id="heardFrom">
+          <option value="" disabled selected>Choose one…</option>
+          <option value="Friend">Friend</option>
+          <option value="School">School</option>
+          <option value="Church">Church</option>
+          <option value="Social Media">Social Media</option>
+          <option value="Other">Other</option>
+        </select>
+        <span class="field-error">Please select an option.</span>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="divider"></div>
+      <div class="submit-area">
+        <div class="api-error" id="apiError">Something went wrong. Please try again.</div>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-text">Register now →</span>
+          <span class="btn-spinner"></span>
+        </button>
+      </div>
+
+    </form>
   </main>
 
-  <!-- ═══════════════════ BREAK OVERLAY ═══════════════════ -->
-  <div class="break-overlay hidden" id="break-overlay">
-    <div class="break-card">
-      <div class="break-icon" id="break-icon">☕</div>
-      <h2 class="break-title" id="break-title">Short Break!</h2>
-      <p class="break-msg" id="break-msg">Great work! Take 5 minutes to rest your eyes and stretch.</p>
-      <div class="break-timer" id="break-timer">5:00</div>
-      <button class="btn-break-skip" id="btn-break-skip">Skip Break →</button>
+  <!-- THANK YOU SCREEN -->
+  <div class="thankyou-wrap" id="thankyouWrap">
+    <div class="thankyou-card">
+      <div class="ty-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 class="ty-headline">You're <em>in!</em></h1>
+      <p class="ty-body">We'll be in touch soon. Can't wait to see you at Alpha Youth.</p>
+      <div class="ty-badge">
+        <span class="ty-dot"></span>
+        Registration confirmed
+      </div>
+      <p class="ty-footer">Alpha Youth · See you there</p>
     </div>
   </div>
 
-  <!-- ═══════════════════ COMPLETE TOAST ═══════════════════ -->
-  <div class="toast hidden" id="toast">
-    <span class="toast-icon" id="toast-icon">🍅</span>
-    <span class="toast-msg" id="toast-msg">Pomodoro complete!</span>
-  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const form         = $('signupForm');
+    const submitBtn    = $('submitBtn');
+    const apiError     = $('apiError');
+    const formCard     = $('formCard');
+    const brand        = $('brand');
+    const thankyouWrap = $('thankyouWrap');
 
-  <script src="app.js"></script>
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const PHONE_RE = /^[+\d][\d\s\-().]{5,18}$/;
+
+    function markGroup(groupId, isError) {
+      const group = $(groupId);
+      group.classList.toggle('has-error', isError);
+      group.querySelector('input, select').classList.toggle('invalid', isError);
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+      const clearEl = () => {
+        el.classList.remove('invalid');
+        el.closest('.form-group').classList.remove('has-error');
+      };
+      el.addEventListener('input', clearEl);
+      el.addEventListener('change', clearEl);
+    });
+
+    function validate() {
+      const firstName     = $('firstName').value.trim();
+      const lastName      = $('lastName').value.trim();
+      const ageRaw        = $('age').value;
+      const age           = parseInt(ageRaw, 10);
+      const parentName    = $('parentName').value.trim();
+      const parentEmail   = $('parentEmail').value.trim();
+      const parentContact = $('parentContact').value.trim();
+      const heardFrom     = $('heardFrom').value;
+
+      let ok = true;
+      const fail = groupId => { markGroup(groupId, true); ok = false; };
+      const pass = groupId => markGroup(groupId, false);
+
+      firstName     ? pass('g-firstName')     : fail('g-firstName');
+      lastName      ? pass('g-lastName')      : fail('g-lastName');
+      (!ageRaw || isNaN(age) || age < 10 || age > 25) ? fail('g-age') : pass('g-age');
+      parentName    ? pass('g-parentName')    : fail('g-parentName');
+      EMAIL_RE.test(parentEmail)   ? pass('g-parentEmail')   : fail('g-parentEmail');
+      PHONE_RE.test(parentContact) ? pass('g-parentContact') : fail('g-parentContact');
+      heardFrom     ? pass('g-heardFrom')     : fail('g-heardFrom');
+
+      return ok;
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      apiError.classList.remove('show');
+
+      if (!validate()) return;
+
+      const payload = {
+        firstName:     $('firstName').value.trim(),
+        lastName:      $('lastName').value.trim(),
+        age:           parseInt($('age').value, 10),
+        parentName:    $('parentName').value.trim(),
+        parentEmail:   $('parentEmail').value.trim(),
+        parentContact: $('parentContact').value.trim(),
+        heardFrom:     $('heardFrom').value
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+
+      try {
+        const res  = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Submission failed');
+
+        formCard.classList.add('hide');
+        brand.classList.add('hide');
+        thankyouWrap.classList.add('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        apiError.textContent = err.message || 'Something went wrong. Please try again.';
+        apiError.classList.add('show');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+      }
+    });
+  </script>
 </body>
 </html>
